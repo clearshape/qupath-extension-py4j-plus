@@ -1,454 +1,385 @@
 package qupath.ext.py4j.core;
 
-import com.google.common.collect.Lists;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
-import ij.ImagePlus;
-import ij.io.FileSaver;
-import javafx.application.Platform;
+import qupath.ext.py4j.core.QuPathEntryPointBase;
+
 import qupath.fx.utils.FXUtils;
 import qupath.imagej.tools.IJTools;
-import qupath.lib.awt.common.BufferedImageTools;
-import qupath.lib.common.GeneralTools;
-import qupath.lib.gui.QuPathGUI;
-import qupath.lib.gui.measure.ObservableMeasurementTableData;
-import qupath.lib.gui.measure.PathTableData;
-import qupath.lib.gui.scripting.QPEx;
-import qupath.lib.gui.tools.GuiTools;
-import qupath.lib.gui.tools.GuiTools.SnapshotType;
-import qupath.lib.gui.viewer.QuPathViewer;
 import qupath.lib.images.ImageData;
 import qupath.lib.images.servers.ImageServer;
-import qupath.lib.io.FeatureCollection;
 import qupath.lib.io.GsonTools;
-import qupath.lib.objects.PathObject;
 import qupath.lib.projects.ProjectImageEntry;
+import qupath.lib.projects.Project;
+import qupath.lib.gui.commands.Commands;
+import qupath.lib.images.servers.ImageServers;
+import qupath.lib.projects.Projects;
+import qupath.lib.projects.ProjectIO;
+import qupath.lib.gui.commands.ProjectCommands;
 import qupath.lib.regions.RegionRequest;
-import qupath.lib.roi.interfaces.ROI;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.Base64;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Stream;
 
 /**
  * Entry point for use with a Py4J Gateway.
  * This provides useful methods to work with QuPath from Python.
  */
-public class QuPathEntryPoint extends QPEx {
+public class QuPathEntryPoint extends QuPathEntryPointBase {
 
 	/**
-	 * @return the current version of this extension
+	 * Refresh the current project in QuPath.
 	 */
-	public static String getExtensionVersion() {
-		return GeneralTools.getPackageVersion(QuPathEntryPoint.class);
+	public static void refreshProject() {
+		FXUtils.callOnApplicationThread(() -> {
+			getQuPath().refreshProject();
+			return null;
+		});
 	}
 
 	/**
-	 * Make and return a snapshot (image) showing what is currently displayed in the provided QuPath window.
+	 * Open a project in QuPath.
 	 *
-	 * @param qupath  the window to snapshot
-	 * @return an array of bytes of the image with the PNG format
-	 * @throws IOException if an error occurs during writing
+	 * @param project the project to open
 	 */
-	public static byte[] snapshot(QuPathGUI qupath) throws IOException {
-		// If we return the snapshot too quickly, we may not see the result of recent actions
-		try {
-			Platform.requestNextPulse();
-			Thread.sleep(50L);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-		return getImageBytes(GuiTools.makeSnapshot(qupath, SnapshotType.MAIN_SCENE), "png");
+	public static void openProjectInQuPath(Project<BufferedImage> project) {
+		FXUtils.callOnApplicationThread(() -> {
+			getQuPath().setProject(project);
+			return null;
+		});
 	}
 
 	/**
-	 * Make and return a snapshot (image) showing what is currently displayed in the provided QuPath viewer.
+	 * Close the current project in QuPath.
 	 *
-	 * @param viewer  the viewer to snapshot
-	 * @return an array of bytes of the image with the PNG format
-	 * @throws IOException if an error occurs during writing
+	 * @return the closed project
 	 */
-	public static byte[] snapshot(QuPathViewer viewer) throws IOException {
-		try {
-			Platform.requestNextPulse();
-			Thread.sleep(50L);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-		return getImageBytes(GuiTools.makeViewerSnapshot(viewer), "png");
+	public static Project<BufferedImage> closeProjectInQuPath() {
+		return FXUtils.callOnApplicationThread(() -> {
+			Project<BufferedImage> project = getQuPath().getProject();
+			Commands.closeProject(getQuPath());
+			return project;
+		});
 	}
 
 	/**
-	 * Same as {@link #snapshot(QuPathGUI)}, but encoded with the {@link Base64} scheme.
-	 */
-	public static String snapshotBase64(QuPathGUI qupath) throws IOException {
-		return base64Encode(snapshot(qupath));
-	}
-
-	/**
-	 * Same as {@link #snapshot(QuPathViewer)}, but encoded with the {@link Base64} scheme.
-	 */
-	public static String snapshotBase64(QuPathViewer viewer) throws IOException {
-		return base64Encode(snapshot(viewer));
-	}
-
-	/**
-	 * Open the image represented by the specified ProjectImageEntry in the
-	 * current QuPath instance.
+	 * Open image data in QuPath.
 	 *
-	 * @param entry  the image entry to open
-	 * @return a boolean indicating if the image was opened
+	 * @param imageData the image data to open
 	 */
-	public static boolean openInQuPath(ProjectImageEntry<BufferedImage> entry) {
-		return FXUtils.callOnApplicationThread(() -> getQuPath().openImageEntry(entry));
+	public static void openImageDataInQuPath(ImageData<BufferedImage> imageData) {
+		FXUtils.callOnApplicationThread(() -> {
+			getCurrentViewer().setImageData(imageData);
+			return null;
+		});
 	}
 
 	/**
-	 * Return the measurement table in text format of all detections
-	 * of the provided image.
+	 * Close the current image data in QuPath.
 	 *
-	 * @param imageData  the image containing the measurements to retrieve
-	 * @return a string representation of the measurement table
+	 * @return the closed image data
 	 */
-	public static String getDetectionMeasurementTable(ImageData<?> imageData) {
-		return imageData == null ? "" : getMeasurementTable(imageData, imageData.getHierarchy().getDetectionObjects());
+	public static ImageData<BufferedImage> closeImageDataInQuPath() {
+		return FXUtils.callOnApplicationThread(() -> {
+			ImageData<BufferedImage> imageData = getCurrentViewer().getImageData();
+			getCurrentViewer().resetImageData();
+			refreshProject();
+			return imageData;
+		});
 	}
 
 	/**
-	 * Return the measurement table in text format of all annotations
-	 * of the provided image.
+	 * Open an image entry in QuPath.
 	 *
-	 * @param imageData  the image containing the measurements to retrieve
-	 * @return a string representation of the measurement table
+	 * @param entry the image entry to open
+	 * @return true if the image entry was opened, false otherwise
 	 */
-	public static String getAnnotationMeasurementTable(ImageData<?> imageData) {
-		return imageData == null ? "" : getMeasurementTable(imageData, imageData.getHierarchy().getAnnotationObjects());
+	public static boolean openImageEntryInQuPath(ProjectImageEntry<BufferedImage> entry) {
+		return FXUtils.callOnApplicationThread(() -> {
+			return getQuPath().openImageEntry(entry);
+		});
 	}
 
 	/**
-	 * Return the measurement table in as a single tab-delimited string.
-	 * This is equivalent to joining all the rows provided by {@link #getMeasurementTableRows(ImageData, Collection)}
-	 * with newline characters.
-	 * <p>
-	 * Note that this may fail for very large tables, because the length of the text exceeds the
-	 * maximum length of a Java String.
-	 * In this case, using {@link #getMeasurementTableRows(ImageData, Collection)} is preferable,
-	 * or alternatively pass fewer objects to measure.
-	 *
-	 * @param imageData  the image containing the measurements to retrieve
-	 * @param pathObjects  the objects containing the measurements to retrieve
-	 * @return a string representation of the measurement table
-	 * @see #getMeasurementTableRows(ImageData, Collection)
+	 * Close the current image entry in QuPath.
 	 */
-	public static String getMeasurementTable(ImageData<?> imageData, Collection<? extends PathObject> pathObjects) {
-		return String.join(System.lineSeparator(), getMeasurementTableRows(imageData, pathObjects));
+	public static void closeImageEntryInQuPath() {
+		FXUtils.callOnApplicationThread(() -> {
+			getCurrentViewer().resetImageData();
+			refreshProject();
+			return null;
+		});
 	}
 
 	/**
-	 * Return the measurement table in a list of tab-delimited strings.
-	 * <p>
-	 * The first item corresponds to the header, while the rest correspond to objects in the provided collection.
+	 * Close an image entry in QuPath.
 	 *
-	 * @param imageData  the image containing the measurements to retrieve
-	 * @param pathObjects  the objects containing the measurements to retrieve
-	 * @return a list of strings representing the measurement table
-	 * @see #getMeasurementTable(ImageData, Collection)
+	 * @param entry the image entry to close
 	 */
-	public static List<String> getMeasurementTableRows(ImageData<?> imageData, Collection<? extends PathObject> pathObjects) {
-		if (imageData == null || pathObjects == null || pathObjects.isEmpty()) {
-			return Collections.emptyList();
-		} else {
-			var table = new ObservableMeasurementTableData();
-			table.setImageData(imageData, pathObjects);
-			return table.getRowStrings("\t", PathTableData.DEFAULT_DECIMAL_PLACES, null);
-		}
-	}
-
-	/**
-	 * Create a {@link PathObject} from a GeoJSON representation.
-	 *
-	 * @param geoJson  the GeoJSON object to convert
-	 * @return a PathObject represented by the GeoJSON object
-	 */
-	public static PathObject toPathObject(String geoJson) {
-		return GsonTools.getInstance().fromJson(geoJson, PathObject.class);
-	}
-
-	/**
-	 * Create a {@link ROI} from a GeoJSON representation.
-	 *
-	 * @param geoJson  the GeoJSON object to convert
-	 * @return a ROI represented by the GeoJSON object
-	 */
-	public static ROI toROI(String geoJson) {
-		return GsonTools.getInstance().fromJson(geoJson, ROI.class);
-	}
-
-	/**
-	 * Create a list of {@link PathObject} from a GeoJSON representation.
-	 *
-	 * @param geoJson  the GeoJSON object to convert
-	 * @return a list of PathObject represented by the GeoJSON object
-	 */
-	public static List<PathObject> toPathObjects(String geoJson) {
-		return toPathObjects(GsonTools.getInstance().fromJson(geoJson, JsonElement.class));
-	}
-
-	/**
-	 * Create a list of {@link PathObject} from a JSON element.
-	 *
-	 * @param jsonElement  the JSON element to convert
-	 * @return a list of PathObject represented by the GeoJSON object
-	 */
-	public static List<PathObject> toPathObjects(JsonElement jsonElement) {
-		if (jsonElement.isJsonArray()) {
-			return toStream(jsonElement.getAsJsonArray().asList(), 10)
-					.flatMap(e -> toPathObjects(e).stream())
-					.toList();
-		} else if (jsonElement.isJsonObject()) {
-			JsonObject jsonObject = jsonElement.getAsJsonObject();
-
-			if (jsonObject.isEmpty()) {
-				return List.of();
-			} else if (jsonObject.has("features")) {
-				return toPathObjects(jsonObject.get("features"));
-			} else {
-				stripNulls(jsonObject);
-				return List.of(GsonTools.getInstance().fromJson(jsonObject, PathObject.class));
+	public static void closeImageEntryInQuPath(ProjectImageEntry<BufferedImage> entry) {
+		FXUtils.callOnApplicationThread(() -> {
+			if (entry.hasImageData()) {
+				if (entry.readImageData() == getCurrentViewer().getImageData()) {
+					getCurrentViewer().resetImageData();
+					refreshProject();
+				}
 			}
-		} else {
-			return List.of();
+			return null;
+		});
+	}
+
+	/**
+	 * Create a new project.
+	 *
+	 * @param projectPath the path to the project
+	 * @return the created project
+	 */
+	public static Project<BufferedImage> createProject(String projectPath) {
+		mkdirs(projectPath);
+		return Projects.createProject(new File(projectPath), BufferedImage.class);
+	}
+
+	/**
+	 * Save a project.
+	 *
+	 * @param project the project to save
+	 * @throws IOException if an error occurs while saving the project
+	 */
+	public static void saveProject(Project<BufferedImage> project) throws IOException {
+		if (project != null) {
+			project.syncChanges();
 		}
 	}
 
 	/**
-	 * Create a list of {@link ROI} from a GeoJSON representation.
+	 * Load a project.
 	 *
-	 * @param geoJson  the GeoJSON object to convert
-	 * @return a list of ROI represented by the GeoJSON object
+	 * @param projectPath the path to the project
+	 * @return the loaded project
+	 * @throws IOException if an error occurs while loading the project
 	 */
-	public static List<ROI> toROIs(String geoJson) {
-		return GsonTools.getInstance().fromJson(geoJson, new TypeToken<List<ROI>>() {}.getType());
+	public static Project<BufferedImage> loadProject(String projectPath) throws IOException {
+		File file = new File(projectPath);
+		if (file.isDirectory()) {
+			file = new File(file, ProjectIO.DEFAULT_PROJECT_NAME + ProjectIO.getProjectExtension(true));
+		}
+		return ProjectIO.loadProject(file, BufferedImage.class);
 	}
 
 	/**
-	 * Convert a collection of PathObjects to a GeoJSON FeatureCollection.
-	 * If there is a chance the resulting string will be too long, prefer instead
-	 * {@link #toFeatureCollections(Collection, int)} to partition objects into separate feature collections.
+	 * Add an image entry to a project.
 	 *
-	 * @param pathObjects  the PathObjects to convert
-	 * @return a GeoJSON FeatureCollection representing the provided PathObjects
+	 * @param project the project to add the image entry to
+	 * @param server  the image server to add
+	 * @param type    the image type
+	 * @return the added image entry
+	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer, ImageData.ImageType)
 	 */
-	public static String toFeatureCollection(Collection<? extends PathObject> pathObjects) {
-		return GsonTools.getInstance().toJson(FeatureCollection.wrap(pathObjects));
+	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
+																 ImageServer<BufferedImage> server,
+																 ImageData.ImageType type) {
+		return ProjectCommands.addSingleImageToProject(project, server, type);
 	}
 
 	/**
-	 * Convert a collection of PathObjects to GeoJSON FeatureCollections, partitioning into separate collections.
-	 * This can be useful for performance reasons, and also to avoid the character limit for strings in Java and Python.
+	 * Add an image entry (with unknown image type) to a project.
 	 *
-	 * @param pathObjects  the PathObjects to convert
-	 * @param chunkSize  the size of each partition
-	 * @return a list of GeoJSON FeatureCollection representing the provided PathObjects
+	 * @param project the project to add the image entry to
+	 * @param server  the image server to add
+	 * @return the added image entry
+	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer, ImageData.ImageType)
 	 */
-	public static List<String> toFeatureCollections(Collection<? extends PathObject> pathObjects, int chunkSize) {
-		return toStream(Lists.partition(new ArrayList<>(pathObjects), chunkSize), 4)
-				.map(QuPathEntryPoint::toFeatureCollection)
-				.toList();
+	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
+																 ImageServer<BufferedImage> server) {
+		return ProjectCommands.addSingleImageToProject(project, server, null);
 	}
 
 	/**
-	 * Convert a collection of PathObjects to a list of GeoJSON objects.
+	 * Add an image entry to a project.
 	 *
-	 * @param pathObjects  the PathObjects to convert
-	 * @return a list of GeoJSON features representing the provided PathObjects
+	 * @param project   the project to add the image entry to
+	 * @param imagePath the image file to add
+	 * @param type      the image type
+	 * @return the added image entry
+	 * @throws IOException if an error occurs while loading the image file
 	 */
-	public static List<String> toGeoJsonFeatureList(Collection<? extends PathObject> pathObjects) {
-		return toStream(pathObjects, 100)
-				.map(QuPathEntryPoint::toGeoJsonFeature)
-				.toList();
+	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
+																 String imagePath,
+																 ImageData.ImageType type) throws IOException {
+		ImageServer<BufferedImage> server = ImageServers.buildServer(imagePath);
+		return addImageEntry(project, server, type);
 	}
 
 	/**
-	 * Retrieve the IDs of a collection of PathObjects.
+	 * Add an image entry (with unknown image type) to a project.
 	 *
-	 * @param pathObjects  the PathObjects whose IDs should be retrieved
-	 * @return a list of IDs of the provided PathObjects
+	 * @param project   the project to add the image entry to
+	 * @param imagePath the image file to add
+	 * @return the added image entry
+	 * @throws IOException if an error occurs while loading the image file
 	 */
-	public static List<String> getObjectIds(Collection<? extends PathObject> pathObjects) {
-		return pathObjects.stream()
-				.map(p -> p.getID().toString())
-				.toList();
+	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
+																 String imagePath) throws IOException {
+		ImageServer<BufferedImage> server = ImageServers.buildServer(imagePath);
+		return addImageEntry(project, server, null);
 	}
 
 	/**
-	 * Get the names of all measurements of the provided PathObjects.
+	 * Remove an image entry from a project.
 	 *
-	 * @param pathObjects  the PathObjects whose measurement names should be retrieved
-	 * @return a list of measurements names present in the provided PathObjects
+	 * @param project       the project to remove the image entry from
+	 * @param entry         the image entry to remove
+	 * @param removeAllData whether to remove all data associated with the image entry
 	 */
-	public static List<String> getMeasurementNames(Collection<? extends PathObject> pathObjects) {
-		return pathObjects.stream()
-				.flatMap(p -> p.getMeasurementList().getMeasurementNames().stream())
-				.distinct()
-				.toList();
+	public static void removeImageEntry(Project<BufferedImage> project,
+										ProjectImageEntry<BufferedImage> entry,
+										boolean removeAllData) {
+		project.removeImage(entry, removeAllData);
 	}
 
 	/**
-	 * Get the measurement values corresponding to the provided measurement name of the
-	 * provided PathObjects.
+	 * Remove an image entry (including associated data) from a project.
 	 *
-	 * @param pathObjects  the PathObjects whose measurement values should be retrieved
-	 * @param name  the name of the measurement to retrieve
-	 * @return a list of measurements values present in the provided PathObjects
+	 * @param project the project to remove the image entry from
+	 * @param entry   the image entry to remove
 	 */
-	public static List<Double> getMeasurements(Collection<? extends PathObject> pathObjects, String name) {
-		return pathObjects.stream()
-				.map(p -> p.getMeasurements().getOrDefault(name, null))
-				.filter(Objects::nonNull)
-				.map(Number::doubleValue)
-				.toList();
+	public static void removeImageEntry(Project<BufferedImage> project,
+										ProjectImageEntry<BufferedImage> entry) {
+		project.removeImage(entry, true);
 	}
 
 	/**
-	 * Convert a {@link PathObject} to a GeoJSON feature.
+	 * Create a new image data.
 	 *
-	 * @param pathObject  the PathObject to convert
-	 * @return a GeoJSON feature representing the provided PathObject
+	 * @param server the image server to create the image data from
+	 * @return the created image data
 	 */
-	public static String toGeoJsonFeature(PathObject pathObject) {
-		return GsonTools.getInstance().toJson(pathObject);
+	public static ImageData<BufferedImage> createImageData(ImageServer<BufferedImage> server) {
+		return new ImageData<BufferedImage>(server);
 	}
 
 	/**
-	 * Convert a {@link ROI} to a GeoJSON feature.
+	 * Create a new image data.
 	 *
-	 * @param roi  the ROI to convert
-	 * @return a GeoJSON feature representing the provided ROI
+	 * @param imagePath the image file to create the image data from
+	 * @return the created image data
 	 */
-	public static String toGeoJson(ROI roi) {
-		return GsonTools.getInstance().toJson(roi);
+	public static ImageData<BufferedImage> createImageData(String imagePath) throws IOException {
+		ImageServer<BufferedImage> server = ImageServers.buildServer(imagePath);
+		return new ImageData<BufferedImage>(server);
 	}
 
 	/**
-	 * Get a hyperstack of an entire image at the provided downsample.
+	 * Create a new image server.
 	 *
-	 * @param server  the image to open
-	 * @param downsample  the downsample to use when reading the image
-	 * @return a TIFF encoded array of bytes corresponding to the hyperstack
-	 * @throws IOException when an error occurs while reading the image
+	 * @param imagePath the path to the image
+	 * @return the created image server
+	 * @throws IOException if an error occurs while loading the image file
 	 */
-	public static byte[] getTiffStack(ImageServer<BufferedImage> server, double downsample) throws IOException {
-		return getTiffStack(server, downsample, 0, 0, server.getWidth(), server.getHeight());
+	public static ImageServer<BufferedImage> createImageServer(String imagePath) throws IOException {
+		return ImageServers.buildServer(imagePath);
 	}
 
 	/**
-	 * Get a hyperstack of a portion of an image at the provided downsample.
+	 * Save an image server to a JSON file.
 	 *
-	 * @param server  the image to open
-	 * @param downsample  the downsample to use when reading the image
-	 * @param x  the x-coordinate of the portion of the image to retrieve
-	 * @param y  the y-coordinate of the portion of the image to retrieve
-	 * @param width  the width of the portion of the image to retrieve
-	 * @param height  the height of the portion of the image to retrieve
-	 * @return a TIFF encoded array of bytes corresponding to the hyperstack
-	 * @throws IOException when an error occurs while reading the image
+	 * @param server         the image server to save
+	 * @param jsonServerPath the path to save the image server to
+	 * @throws IOException   if an error occurs while saving the image server
 	 */
-	public static byte[] getTiffStack(ImageServer<BufferedImage> server, double downsample, int x, int y, int width, int height) throws IOException {
-		return getTiffStack(server, downsample, x, y, width, height, 0, 0);
+	public static void saveImageServer(ImageServer<BufferedImage> server,
+									   String jsonServerPath) throws IOException {
+		try (FileWriter writer = new FileWriter(jsonServerPath)) {
+			String serverJson = GsonTools.getInstance().toJson(server);
+			writer.write(serverJson);
+		}
 	}
 
 	/**
-	 * Get a hyperstack of an image for a specific region, using all z-slices and time points from 0
-	 * to the ones specified in the parameters.
+	 * Load an image server from a JSON file.
 	 *
-	 * @param server  the image to open
-	 * @param downsample  the downsample to use when reading the image
-	 * @param x  the x-coordinate of the portion of the image to retrieve
-	 * @param y  the y-coordinate of the portion of the image to retrieve
-	 * @param width  the width of the portion of the image to retrieve
-	 * @param height  the height of the portion of the image to retrieve
-	 * @param z  the z-stacks 0 to this parameter will be retrieved
-	 * @param t  the time points 0 to this parameter will be retrieved
-	 * @return a TIFF encoded array of bytes corresponding to the hyperstack
-	 * @throws IOException when an error occurs while reading the image
+	 * @param jsonServerPath the path to the JSON file
+	 * @return the loaded image server
+	 * @throws IOException if an error occurs while loading the image server
 	 */
-	public static byte[] getTiffStack(ImageServer<BufferedImage> server, double downsample, int x, int y, int width, int height, int z, int t) throws IOException {
-		return getTiffStack(
-				server,
-				RegionRequest.createInstance(server.getPath(), downsample, x, y, width, height, z, t)
-		);
+	public static ImageServer<BufferedImage> loadImageServer(String jsonServerPath) throws IOException {
+		return ImageServers.buildServer(jsonServerPath);
 	}
 
 	/**
-	 * Get a hyperstack of an image for a specific region, using all z-slices and time points from 0
-	 * to the ones specified in the provided RegionRequest.
+	 * Add an image entry to a project.
 	 *
-	 * @param server  the image to open
-	 * @param request  the region to read. All z-stacks from 0 to {@link RegionRequest#getZ()} and time points
-	 *                 from 0 to {@link RegionRequest#getT()} will be retrieved
-	 * @return a TIFF encoded array of bytes corresponding to the hyperstack
-	 * @throws IOException when an error occurs while reading the image
+	 * @param project the project to add the image entry to
+	 * @param server  the image server to add
+	 * @param type    the image type
+	 * @return the added image entry
+	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer, ImageData.ImageType)
 	 */
-	public static byte[] getTiffStack(ImageServer<BufferedImage> server, RegionRequest request) throws IOException {
-		return toTiffBytes(IJTools.extractHyperstack(server, request));
+	public static ProjectImageEntry<BufferedImage> addImage(Project<BufferedImage> project,
+															ImageServer<BufferedImage> server,
+															ImageData.ImageType type) {
+		return addImageEntry(project, server, type);
 	}
 
 	/**
-	 * Same as {@link #getTiffStack(ImageServer, double)}, but encoded with the {@link Base64} scheme.
+	 * Add an image entry (with unknown image type) to a project.
+	 *
+	 * @param project the project to add the image entry to
+	 * @param server  the image server to add
+	 * @return the added image entry
+	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer, ImageData.ImageType)
 	 */
-	public static String getTiffStackBase64(ImageServer<BufferedImage> server, double downsample) throws IOException {
-		return base64Encode(getTiffStack(server, downsample));
+	public static ProjectImageEntry<BufferedImage> addImage(Project<BufferedImage> project,
+															ImageServer<BufferedImage> server) {
+		return addImageEntry(project, server);
 	}
 
 	/**
-	 * Same as {@link #getTiffStack(ImageServer, double, int, int, int, int)}, but encoded with the {@link Base64} scheme.
+	 * @deprecated use {@link #addImageEntry(Project, String, ImageData.ImageType)} instead.
+	 * Add an image entry to a project.
+	 *
+	 * @param project   the project to add the image entry to
+	 * @param imagePath the image file to add
+	 * @param type      the image type
+	 * @return the added image entry
+	 * @throws IOException if an error occurs while loading the image file
 	 */
-	public static String getTiffStackBase64(ImageServer<BufferedImage> server, double downsample, int x, int y, int width, int height) throws IOException {
-		return base64Encode(getTiffStack(server, downsample, x, y, width, height));
+	public static ProjectImageEntry<BufferedImage> addImage(Project<BufferedImage> project,
+															String imagePath,
+															ImageData.ImageType type) throws IOException {
+		return addImageEntry(project, imagePath, type);
 	}
 
 	/**
-	 * Same as {@link #getTiffStack(ImageServer, double, int, int, int, int, int, int)}, but encoded with the {@link Base64} scheme.
+	 * Add an image entry (with unknown image type) to a project.
+	 *
+	 * @param project   the project to add the image entry to
+	 * @param imagePath the image file to add
+	 * @return the added image entry
+	 * @throws IOException if an error occurs while loading the image file
 	 */
-	public static String getTiffStackBase64(ImageServer<BufferedImage> server, double downsample, int x, int y, int width, int height, int z, int t) throws IOException {
-		return base64Encode(getTiffStack(server, downsample, x, y, width, height, z, t));
-	}
-
-	/**
-	 * Same as {@link #getTiffStack(ImageServer, RegionRequest)}, but encoded with the {@link Base64} scheme.
-	 */
-	public static String getTiffStackBase64(ImageServer<BufferedImage> server, RegionRequest request) throws IOException {
-		return base64Encode(getTiffStack(server, request));
+	public static ProjectImageEntry<BufferedImage> addImage(Project<BufferedImage> project,
+															String imagePath) throws IOException {
+		return addImageEntry(project, imagePath);
 	}
 
 	/**
 	 * Read the first z-slice and first time point of the provided image at the provided downsample
-	 * and return an image with the provided format.
+	 * and return an image with the default format 'imagej tiff'.
 	 *
-	 * @param server  the image to open
+	 * @param server      the image to open
 	 * @param downsample  the downsample to use when reading the image
-	 * @param format  the format the result should have
-	 * @return an array of bytes described the requested image with the provided format
+	 * @return an array of bytes described the requested image with the 'imagej tiff' format
 	 * @throws IOException when an error occurs while reading the image
 	 */
-	public static byte[] getImageBytes(ImageServer<BufferedImage> server, double downsample, String format) throws IOException {
-		return getImageBytes(server, downsample, 0, 0, server.getWidth(), server.getHeight(), format);
+	public static byte[] getImageBytes(ImageServer<BufferedImage> server, double downsample) throws IOException {
+		return getImageBytes(server, downsample, "imagej tiff");
 	}
 
 	/**
 	 * Read the first z-slice and first time point of a portion of the provided image at the provided downsample
-	 * and return an image with the provided format.
+	 * and return an image with the default format 'imagej tiff'.
 	 *
 	 * @param server  the image to open
 	 * @param downsample  the downsample to use when reading the image
@@ -456,16 +387,15 @@ public class QuPathEntryPoint extends QPEx {
 	 * @param y  the y-coordinate of the portion of the image to retrieve
 	 * @param width  the width of the portion of the image to retrieve
 	 * @param height  the height of the portion of the image to retrieve
-	 * @param format  the format the result should have
-	 * @return an array of bytes described the requested image with the provided format
+	 * @return an array of bytes described the requested image with the 'imagej tiff' format
 	 * @throws IOException when an error occurs while reading the image
 	 */
-	public static byte[] getImageBytes(ImageServer<BufferedImage> server, double downsample, int x, int y, int width, int height, String format) throws IOException {
-		return getImageBytes(server, downsample, x, y, width, height, 0, 0, format);
+	public static byte[] getImageBytes(ImageServer<BufferedImage> server, double downsample, int x, int y, int width, int height) throws IOException {
+		return getImageBytes(server, downsample, x, y, width, height, "imagej tiff");
 	}
 
 	/**
-	 * Read a portion of the provided image at the provided downsample and return an image with the provided format.
+	 * Read a portion of the provided image at the provided downsample and return an image with the default format 'imagej tiff'.
 	 *
 	 * @param server  the image to open
 	 * @param downsample  the downsample to use when reading the image
@@ -475,141 +405,52 @@ public class QuPathEntryPoint extends QPEx {
 	 * @param height  the height of the portion of the image to retrieve
 	 * @param z  the z-slice of the image to retrieve
 	 * @param t  the time point of the image to retrieve
-	 * @param format  the format the result should have
-	 * @return an array of bytes described the requested image with the provided format
+	 * @return an array of bytes described the requested image with the 'imagej tiff' format
 	 * @throws IOException when an error occurs while reading the image
 	 */
-	public static byte[] getImageBytes(ImageServer<BufferedImage> server, double downsample, int x, int y, int width, int height, int z, int t, String format) throws IOException {
-        return getImageBytes(
-				server,
-				RegionRequest.createInstance(server.getPath(), downsample, x, y, width, height, z, t),
-				format
-		);
+	public static byte[] getImageBytes(ImageServer<BufferedImage> server, double downsample, int x, int y, int width, int height, int z, int t) throws IOException {
+		return getImageBytes(server, downsample, x, y, width, height, z, t, "imagej tiff");
 	}
 
 	/**
-	 * Read a portion of the provided image and return an image with the provided format.
+	 * Read a portion of the provided image and return an image with the default format 'imagej tiff'.
 	 *
 	 * @param server  the image to open
 	 * @param request  the region to read.
-	 * @param format  the format the result should have
-	 * @return an array of bytes described the requested image with the provided format
+	 * @return an array of bytes described the requested image with the 'imagej tiff' format
 	 * @throws IOException when an error occurs while reading the image
 	 */
-	public static byte[] getImageBytes(ImageServer<BufferedImage> server, RegionRequest request, String format) throws IOException {
-		if (isImageJFormat(format)) {
-			return toTiffBytes(IJTools.convertToImagePlus(server, request).getImage());
-		} else {
-			return getImageBytes(server.readRegion(request), format);
-		}
+	public static byte[] getImageBytes(ImageServer<BufferedImage> server, RegionRequest request) throws IOException {
+		return getImageBytes(server, request, "imagej tiff");
 	}
 
 	/**
-	 * Same as {@link #getImageBytes(ImageServer, double, String)}, but encoded with the {@link Base64} scheme.
+	 * Same as {@link #getImageBytes(ImageServer, double)}, but encoded with the {@link Base64} scheme.
 	 */
-	public static String getImageBase64(ImageServer<BufferedImage> server, double downsample, String format) throws IOException {
-		return base64Encode(getImageBytes(server, downsample, format));
+	public static String getImageBase64(ImageServer<BufferedImage> server, double downsample) throws IOException {
+		return getImageBase64(server, downsample, "imagej tiff");
 	}
 
 	/**
-	 * Same as {@link #getImageBytes(ImageServer, double, int, int, int, int, String)}, but encoded with the {@link Base64} scheme.
+	 * Same as {@link #getImageBytes(ImageServer, double, int, int, int, int)}, but encoded with the {@link Base64} scheme.
 	 */
-	public static String getImageBase64(ImageServer<BufferedImage> server, double downsample, int x, int y, int width, int height, String format) throws IOException {
-		return base64Encode(getImageBytes(server, downsample, x, y, width, height, format));
+	public static String getImageBase64(ImageServer<BufferedImage> server, double downsample, int x, int y, int width, int height) throws IOException {
+		return getImageBase64(server, downsample, x, y, width, height, "imagej tiff");
 	}
 
 	/**
-	 * Same as {@link #getImageBytes(ImageServer, double, int, int, int, int, int, int, String)}, but encoded with the {@link Base64} scheme.
+	 * Same as {@link #getImageBytes(ImageServer, double, int, int, int, int, int, int)}, but encoded with the {@link Base64} scheme.
 	 */
-	public static String getImageBase64(ImageServer<BufferedImage> server, double downsample, int x, int y, int width, int height, int z, int t, String format) throws IOException {
-		return base64Encode(getImageBytes(server, downsample, x, y, width, height, z, t, format));
+	public static String getImageBase64(ImageServer<BufferedImage> server, double downsample, int x, int y, int width, int height, int z, int t) throws IOException {
+		return getImageBase64(server, downsample, x, y, width, height, z, t, "imagej tiff");
 	}
 
 	/**
-	 * Same as {@link #getImageBytes(ImageServer, RegionRequest, String)}, but encoded with the {@link Base64} scheme.
+	 * Same as {@link #getImageBytes(ImageServer, RegionRequest)}, but encoded with the {@link Base64} scheme.
 	 */
-	public static String getImageBase64(ImageServer<BufferedImage> server, RegionRequest request, String format) throws IOException {
-		return base64Encode(getImageBytes(server, request, format));
+	public static String getImageBase64(ImageServer<BufferedImage> server, RegionRequest request) throws IOException {
+		return getImageBase64(server, request, "imagej tiff");
 	}
 
-	/**
-	 * Convert a {@link BufferedImage} to an array of bytes. If the image is RGB, the format of the returned image is PNG.
-	 * Otherwise, it's "imagej tiff".
-	 *
-	 * @param image  the image to convert
-	 * @return  an array of bytes corresponding to the provided image
-	 * @throws IOException when an error occurs while reading the image
-	 */
-	public static byte[] getImageBytes(BufferedImage image) throws IOException {
-		return getImageBytes(image, chooseAutoFormat(image));
-	}
 
-	/**
-	 * Convert a {@link BufferedImage} to an array of bytes with the provided format.
-	 *
-	 * @param image  the image to convert
-	 * @param format  the format of the returned image
-	 * @return an array of bytes corresponding to the provided image
-	 * @throws IOException when an error occurs while reading the image
-	 */
-	public static byte[] getImageBytes(BufferedImage image, String format) throws IOException {
-		if (format == null || "auto".equalsIgnoreCase(format) || format.isEmpty()) {
-			format = chooseAutoFormat(image);
-		}
-
-		if (isImageJFormat(format)) {
-			return toTiffBytes(IJTools.convertToUncalibratedImagePlus("Image", image));
-		} else {
-			try (var stream = new ByteArrayOutputStream(Math.min(1024*1024*10, image.getWidth() * image.getHeight() + 1024))) {
-				ImageIO.write(image, format, stream);
-				return stream.toByteArray();
-			}
-		}
-	}
-
-	private static String base64Encode(byte[] bytes) {
-		return Base64.getEncoder().encodeToString(bytes);
-	}
-
-	private static <T> Stream<T> toStream(Collection<T> collection, int minSizeForParallelism) {
-		if (collection.size() >= minSizeForParallelism) {
-			return collection.parallelStream();
-		} else {
-			return collection.stream();
-		}
-	}
-
-	/**
-	 * Strip entries that have a null value. This is needed because QuPath's v0.4.3 GeoJSON deserialization
-	 * fails on some null entries.
-	 *
-	 * @param jsonObject  the JSON object to remove nulls from
-	 */
-	private static void stripNulls(JsonObject jsonObject) {
-		for (String key: jsonObject.keySet()) {
-			JsonElement member = jsonObject.get(key);
-
-			if (member == null || member.isJsonNull()) {
-				jsonObject.remove(key);
-			} else if (member.isJsonObject()) {
-				stripNulls(member.getAsJsonObject());
-			}
-		}
-	}
-
-	private static byte[] toTiffBytes(ImagePlus imp) {
-		return new FileSaver(imp).serialize();
-	}
-
-	private static boolean isImageJFormat(String format) {
-		return Set.of("imagej tiff", "imagej tif").contains(format.toLowerCase());
-	}
-
-	private static String chooseAutoFormat(BufferedImage img) {
-		if (BufferedImageTools.is8bitColorType(img.getType())) {
-			return "png";
-		} else {
-			return "imagej tiff";
-		}
-	}
 }
