@@ -38,6 +38,16 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	}
 
 	/**
+	 * Repaint the entire image in the current Viewer.
+	 */
+	public static void repaintEntireImage() {
+		FXUtils.callOnApplicationThread(() -> {
+			getCurrentViewer().repaintEntireImage();
+			return null;
+		});
+	}
+
+	/**
 	 * Open a project in QuPath.
 	 *
 	 * @param project the project to open
