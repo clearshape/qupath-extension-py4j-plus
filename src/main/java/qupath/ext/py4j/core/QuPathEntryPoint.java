@@ -1,8 +1,9 @@
 package qupath.ext.py4j.core;
 
-import qupath.ext.py4j.core.QuPathEntryPointBase;
-
 import qupath.fx.utils.FXUtils;
+import qupath.lib.gui.panes.ImageDetailsPane;
+import qupath.lib.gui.prefs.PathPrefs;
+import qupath.lib.gui.tools.GuiTools;
 import qupath.lib.images.ImageData;
 import qupath.lib.images.servers.ImageServer;
 import qupath.lib.io.GsonTools;
@@ -75,11 +76,17 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	/**
 	 * Open image data in QuPath.
 	 *
+	 * <p>
+	 * This method opens the specified image data in the QuPath viewer.
+	 * It also sets the image type to the estimated one if it is not already set.
+	 * </p>
+	 *
 	 * @param imageData the image data to open
 	 */
 	public static void openImageDataInQuPath(ImageData<BufferedImage> imageData) {
 		FXUtils.callOnApplicationThread(() -> {
 			getCurrentViewer().setImageData(imageData);
+			setImageType(imageData);
 			return null;
 		});
 	}
@@ -100,21 +107,40 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 
 	/**
 	 * Open an image entry in QuPath.
+	 * <p>
+	 * If the current image data has been changed, it will be saved before opening
+	 * the new image entry.
+	 * </p>
+	 *
 	 *
 	 * @param entry the image entry to open
 	 * @return true if the image entry was opened, false otherwise
 	 */
 	public static boolean openImageEntryInQuPath(ProjectImageEntry<BufferedImage> entry) {
 		return FXUtils.callOnApplicationThread(() -> {
+			// save the current imageData if it has been changed
+			var imageData = getCurrentImageData();
+			if ((imageData != null) && (imageData.isChanged())) {
+				getProject().getEntry(imageData).saveImageData(imageData);
+			}
 			return getQuPath().openImageEntry(entry);
 		});
 	}
 
 	/**
 	 * Close the current image entry in QuPath.
+	 * <p>
+	 * If the current image data has been changed, it will be saved before closing
+	 * the image entry.
+	 * </p>
 	 */
 	public static void closeImageEntryInQuPath() {
 		FXUtils.callOnApplicationThread(() -> {
+			// save the current imageData if it has been changed
+			var imageData = getCurrentImageData();
+			if ((imageData != null) && (imageData.isChanged())) {
+				getProject().getEntry(imageData).saveImageData(imageData);
+			}
 			getCurrentViewer().resetImageData();
 			refreshProject();
 			return null;
@@ -128,11 +154,8 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 */
 	public static void closeImageEntryInQuPath(ProjectImageEntry<BufferedImage> entry) {
 		FXUtils.callOnApplicationThread(() -> {
-			if (entry.hasImageData()) {
-				if (entry.readImageData() == getCurrentViewer().getImageData()) {
-					getCurrentViewer().resetImageData();
-					refreshProject();
-				}
+			if (entry == getProject().getEntry(getCurrentImageData())) {
+				closeImageEntryInQuPath();
 			}
 			return null;
 		});
@@ -177,41 +200,43 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	}
 
 	/**
-	 * Add an image entry to a project.
+	 * Add an image entry to a project, with a specified image type.
 	 *
 	 * @param project the project to add the image entry to
 	 * @param server  the image server to add
-	 * @param type    the image type
+	 * @param type    the image type, or null to use the default
 	 * @return the added image entry
+	 * <p>The thumbnail of the entry is refreshed.</p>
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
 	 *      ImageData.ImageType)
 	 */
 	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
 			ImageServer<BufferedImage> server,
-			ImageData.ImageType type) {
-		return ProjectCommands.addSingleImageToProject(project, server, type);
+			ImageData.ImageType type) throws IOException {
+		var entry = ProjectCommands.addSingleImageToProject(project, server, type);
+		entry.setThumbnail(ProjectCommands.getThumbnailRGB(server));	// refresh its thumbnail
+		return entry;
 	}
 
 	/**
-	 * Add an image entry (with unknown image type) to a project.
+	 * Add an image entry to a project, with an unknown image type.
 	 *
 	 * @param project the project to add the image entry to
 	 * @param server  the image server to add
-	 * @return the added image entry
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
 	 *      ImageData.ImageType)
 	 */
 	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
-			ImageServer<BufferedImage> server) {
-		return ProjectCommands.addSingleImageToProject(project, server, null);
+			ImageServer<BufferedImage> server) throws IOException {
+		return addImageEntry(project, server, ImageData.ImageType.UNSET);
 	}
 
 	/**
-	 * Add an image entry to a project.
+	 * Add an image entry to a project, with a specified image type.
 	 *
 	 * @param project   the project to add the image entry to
 	 * @param imagePath the image file to add
-	 * @param type      the image type
+	 * @param type      the image type, or null to use the default
 	 * @return the added image entry
 	 * @throws IOException if an error occurs while loading the image file
 	 */
@@ -223,17 +248,16 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	}
 
 	/**
-	 * Add an image entry (with unknown image type) to a project.
+	 * Add an image entry to a project, with an unknown image type.
 	 *
 	 * @param project   the project to add the image entry to
-	 * @param imagePath the image file to add
 	 * @return the added image entry
 	 * @throws IOException if an error occurs while loading the image file
 	 */
 	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
 			String imagePath) throws IOException {
 		ImageServer<BufferedImage> server = ImageServers.buildServer(imagePath);
-		return addImageEntry(project, server, null);
+		return addImageEntry(project, server, ImageData.ImageType.UNSET);
 	}
 
 	/**
@@ -268,7 +292,7 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @return the created image data
 	 */
 	public static ImageData<BufferedImage> createImageData(ImageServer<BufferedImage> server) {
-		return new ImageData<BufferedImage>(server);
+		return new ImageData<BufferedImage>(server, ImageData.ImageType.UNSET);
 	}
 
 	/**
@@ -320,9 +344,10 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	}
 
 	/**
-	 * Add an image entry to a project.
+	 * Add an image entry to a project, with a specified image type.
 	 *
 	 * @param project the project to add the image entry to
+	 * @param server  the image server to add
 	 * @param server  the image server to add
 	 * @param type    the image type
 	 * @return the added image entry
@@ -331,30 +356,29 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 */
 	public static ProjectImageEntry<BufferedImage> addImage(Project<BufferedImage> project,
 			ImageServer<BufferedImage> server,
-			ImageData.ImageType type) {
+			ImageData.ImageType type) throws IOException {
 		return addImageEntry(project, server, type);
 	}
 
 	/**
-	 * Add an image entry (with unknown image type) to a project.
+	 * Add an image entry to a project, with an unknown image type.
 	 *
 	 * @param project the project to add the image entry to
 	 * @param server  the image server to add
-	 * @return the added image entry
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
 	 *      ImageData.ImageType)
 	 */
 	public static ProjectImageEntry<BufferedImage> addImage(Project<BufferedImage> project,
-			ImageServer<BufferedImage> server) {
+			ImageServer<BufferedImage> server) throws IOException {
 		return addImageEntry(project, server);
 	}
 
 	/**
-	 * Add an image entry to a project.
+	 * Add an image entry to a project, with a specified image type.
 	 *
 	 * @param project   the project to add the image entry to
 	 * @param imagePath the image file to add
-	 * @param type      the image type
+	 * @param type      the image type, or null to use the default
 	 * @return the added image entry
 	 * @throws IOException if an error occurs while loading the image file
 	 */
@@ -365,10 +389,37 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	}
 
 	/**
-	 * Add an image entry (with unknown image type) to a project.
+	 * Set the image type of the image data.
+	 *
+	 * <p>
+	 * If the image type is not set, it will be estimated.
+	 * If the image type setting is set to {@link PathPrefs.ImageTypeSetting#PROMPT},
+	 * a prompt will be displayed to set the image type.
+	 * If the image type setting is set to {@link PathPrefs.ImageTypeSetting#AUTO_ESTIMATE},
+	 * the image type will be automatically set.
+	 * </p>
+	 * @param imageData the image data to set the image type
+	 */
+	public static void setImageType(ImageData<BufferedImage> imageData) throws IOException {
+		if ((imageData != null) && (imageData.getImageType() == null || imageData.getImageType() == ImageData.ImageType.UNSET)) {
+			var setType = PathPrefs.imageTypeSettingProperty().get();
+			if (setType == PathPrefs.ImageTypeSetting.AUTO_ESTIMATE || setType == PathPrefs.ImageTypeSetting.PROMPT) {
+				var server = imageData.getServer();
+				var type = GuiTools.estimateImageType(server, server.getDefaultThumbnail(0,0));
+				if (setType == PathPrefs.ImageTypeSetting.PROMPT) {
+					ImageDetailsPane.promptToSetImageType(imageData, type);
+				} else {
+					imageData.setImageType(type);
+					imageData.setChanged(false); // Don't want to retain this as a change resulting in a prompt to save the data
+				}
+			}
+		}
+	}
+
+	/**
+	 * Add an image entry to a project, with an unknown image type.
 	 *
 	 * @param project   the project to add the image entry to
-	 * @param imagePath the image file to add
 	 * @return the added image entry
 	 * @throws IOException if an error occurs while loading the image file
 	 */
