@@ -65,101 +65,108 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 *
 	 * @return the closed project
 	 */
-	public static Project<BufferedImage> closeProjectInQuPath() {
-		return FXUtils.callOnApplicationThread(() -> {
-			Project<BufferedImage> project = getQuPath().getProject();
+	public static void closeProjectInQuPath() {
+		FXUtils.callOnApplicationThread(() -> {
 			Commands.closeProject(getQuPath());
-			return project;
+			return null;
 		});
 	}
 
 	/**
 	 * Open image data in QuPath.
-	 *
 	 * <p>
-	 * This method opens the specified image data in the QuPath viewer.
-	 * It also sets the image type to the estimated one if it is not already set.
+	 * If the current image data has been changed, it will be saved before opening
+	 * the new image data.
 	 * </p>
 	 *
 	 * @param imageData the image data to open
 	 */
 	public static void openImageDataInQuPath(ImageData<BufferedImage> imageData) {
 		FXUtils.callOnApplicationThread(() -> {
+			saveCurrentImageData();
 			getCurrentViewer().setImageData(imageData);
-			setImageType(imageData);
 			return null;
 		});
 	}
 
 	/**
 	 * Close the current image data in QuPath.
+	 * <p>
+	 * If the current image data has been changed, it will be saved before closing it.
+	 * </p>
 	 *
 	 * @return the closed image data
 	 */
-	public static ImageData<BufferedImage> closeImageDataInQuPath() {
-		return FXUtils.callOnApplicationThread(() -> {
-			ImageData<BufferedImage> imageData = getCurrentViewer().getImageData();
-			getCurrentViewer().resetImageData();
-			refreshProject();
-			return imageData;
-		});
-	}
-
-	/**
-	 * Open an image entry in QuPath.
-	 * <p>
-	 * If the current image data has been changed, it will be saved before opening
-	 * the new image entry.
-	 * </p>
-	 *
-	 *
-	 * @param entry the image entry to open
-	 * @return true if the image entry was opened, false otherwise
-	 */
-	public static boolean openImageEntryInQuPath(ProjectImageEntry<BufferedImage> entry) {
-		return FXUtils.callOnApplicationThread(() -> {
-			// save the current imageData if it has been changed
-			var imageData = getCurrentImageData();
-			if ((imageData != null) && (imageData.isChanged())) {
-				getProject().getEntry(imageData).saveImageData(imageData);
-			}
-			return getQuPath().openImageEntry(entry);
-		});
-	}
-
-	/**
-	 * Close the current image entry in QuPath.
-	 * <p>
-	 * If the current image data has been changed, it will be saved before closing
-	 * the image entry.
-	 * </p>
-	 */
-	public static void closeImageEntryInQuPath() {
+	public static void closeImageDataInQuPath() {
 		FXUtils.callOnApplicationThread(() -> {
-			// save the current imageData if it has been changed
-			var imageData = getCurrentImageData();
-			if ((imageData != null) && (imageData.isChanged())) {
-				getProject().getEntry(imageData).saveImageData(imageData);
-			}
+			saveCurrentImageData();
 			getCurrentViewer().resetImageData();
-			refreshProject();
+	//		refreshProject();
 			return null;
 		});
 	}
 
-	/**
-	 * Close an image entry in QuPath.
-	 *
-	 * @param entry the image entry to close
-	 */
-	public static void closeImageEntryInQuPath(ProjectImageEntry<BufferedImage> entry) {
-		FXUtils.callOnApplicationThread(() -> {
-			if (entry == getProject().getEntry(getCurrentImageData())) {
-				closeImageEntryInQuPath();
-			}
-			return null;
-		});
-	}
+
+//
+//	 comment out these 3 methods
+//	 1. use OpenImageDataInPath(imageData) to open the entry
+//	 2. with imageData = entry.readImageData() <- this is how to get the imageData with GUI!
+//	 3. this will ensure the same codes (GUI or not) -
+//	    a. imageData == getCurrentImageData()
+//	    b. imageData is the associated imageData of entry
+//	 4. entry.saveImageData(imageData) to save your analysis results
+//
+
+//	/**
+//	 * Open an image entry in QuPath.
+//	 * <p>
+//	 * If the current image data has been changed, it will be saved before opening
+//	 * the new image entry.
+//	 * </p>
+//	 *
+//	 * @param entry the image entry to open
+//	 * @return true if the image entry was opened, false otherwise
+//	 */
+//	public static boolean openImageEntryInQuPath(ProjectImageEntry<BufferedImage> entry) {
+//		return FXUtils.callOnApplicationThread(() -> {
+//			saveCurrentImageData();
+//			return getQuPath().openImageEntry(entry);
+//		});
+//	}
+
+//	/**
+//	 * Close the current image entry in QuPath.
+//	 * <p>
+//	 * If the current image data has been changed, it will be saved before closing
+//	 * the image entry.
+//	 * </p>
+//	 */
+//	public static void closeImageEntryInQuPath() {
+//		FXUtils.callOnApplicationThread(() -> {
+//			saveCurrentImageData();
+//			getCurrentViewer().resetImageData();
+//			refreshProject();
+//			return null;
+//		});
+//	}
+
+//	/**
+//	 * Close the specified image entry in QuPath.
+//	 * <p>
+//	 * If the current image data has been changed, it will be saved before closing
+//	 * the image entry.
+//	 * </p>
+//	 *
+//	 * @param entry the image entry to close
+//	 */
+//	public static void closeImageEntryInQuPath(ProjectImageEntry<BufferedImage> entry) {
+//		FXUtils.callOnApplicationThread(() -> {
+//			if (entry == getProject().getEntry(getCurrentImageData())) {
+//				closeImageEntryInQuPath();
+//			}
+//			return null;
+//		});
+//	}
 
 	/**
 	 * Create a new project.
@@ -204,7 +211,7 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 *
 	 * @param project the project to add the image entry to
 	 * @param server  the image server to add
-	 * @param type    the image type, or null to use the default
+	 * @param type    the image type, or null (hasImageData() == false)
 	 * @return the added image entry
 	 * <p>The thumbnail of the entry is refreshed.</p>
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
@@ -214,12 +221,12 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 			ImageServer<BufferedImage> server,
 			ImageData.ImageType type) throws IOException {
 		var entry = ProjectCommands.addSingleImageToProject(project, server, type);
-		entry.setThumbnail(ProjectCommands.getThumbnailRGB(server));	// refresh its thumbnail
+		refreshThumbnail(entry, server);	// refresh its thumbnail
 		return entry;
 	}
 
 	/**
-	 * Add an image entry to a project, with an unknown image type.
+	 * Add an image entry to a project, with the estimated image type.
 	 *
 	 * @param project the project to add the image entry to
 	 * @param server  the image server to add
@@ -228,7 +235,7 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 */
 	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
 			ImageServer<BufferedImage> server) throws IOException {
-		return addImageEntry(project, server, ImageData.ImageType.UNSET);
+		return addImageEntry(project, server, estimatedImageType(server));
 	}
 
 	/**
@@ -236,7 +243,7 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 *
 	 * @param project   the project to add the image entry to
 	 * @param imagePath the image file to add
-	 * @param type      the image type, or null to use the default
+	 * @param type      the image type, or null (hasImageData() == false)
 	 * @return the added image entry
 	 * @throws IOException if an error occurs while loading the image file
 	 */
@@ -248,7 +255,7 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	}
 
 	/**
-	 * Add an image entry to a project, with an unknown image type.
+	 * Add an image entry to a project, with the estimated image type.
 	 *
 	 * @param project   the project to add the image entry to
 	 * @return the added image entry
@@ -257,7 +264,7 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
 			String imagePath) throws IOException {
 		ImageServer<BufferedImage> server = ImageServers.buildServer(imagePath);
-		return addImageEntry(project, server, ImageData.ImageType.UNSET);
+		return addImageEntry(project, server);
 	}
 
 	/**
@@ -286,24 +293,45 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	}
 
 	/**
-	 * Create a new image data.
+	 * Create a new image data with the specified image type.
+	 *
+	 * @param server the image server to create the image data from
+	 * @param type the image type
+	 * @return the created image data
+	 */
+	public static ImageData<BufferedImage> createImageData(ImageServer<BufferedImage> server, ImageData.ImageType type) throws IOException {
+		return new ImageData<BufferedImage>(server, type);
+	}
+
+	/**
+	 * Create a new image data with the specified image type.
+	 *
+	 * @param imagePath the image file to create the image data from
+	 * @param type the image type
+	 * @return the created image data
+	 */
+	public static ImageData<BufferedImage> createImageData(String imagePath, ImageData.ImageType type) throws IOException {
+		return createImageData(ImageServers.buildServer(imagePath), type);
+	}
+
+	/**
+	 * Create a new image data with the estimated image type.
 	 *
 	 * @param server the image server to create the image data from
 	 * @return the created image data
 	 */
-	public static ImageData<BufferedImage> createImageData(ImageServer<BufferedImage> server) {
-		return new ImageData<BufferedImage>(server, ImageData.ImageType.UNSET);
+	public static ImageData<BufferedImage> createImageData(ImageServer<BufferedImage> server) throws IOException {
+		return createImageData(server, estimatedImageType(server));
 	}
 
 	/**
-	 * Create a new image data.
+	 * Create a new image data with the estimated image type.
 	 *
 	 * @param imagePath the image file to create the image data from
 	 * @return the created image data
 	 */
 	public static ImageData<BufferedImage> createImageData(String imagePath) throws IOException {
-		ImageServer<BufferedImage> server = ImageServers.buildServer(imagePath);
-		return new ImageData<BufferedImage>(server);
+		return createImageData(ImageServers.buildServer(imagePath));
 	}
 
 	/**
@@ -386,34 +414,6 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 			String imagePath,
 			ImageData.ImageType type) throws IOException {
 		return addImageEntry(project, imagePath, type);
-	}
-
-	/**
-	 * Set the image type of the image data.
-	 *
-	 * <p>
-	 * If the image type is not set, it will be estimated.
-	 * If the image type setting is set to {@link PathPrefs.ImageTypeSetting#PROMPT},
-	 * a prompt will be displayed to set the image type.
-	 * If the image type setting is set to {@link PathPrefs.ImageTypeSetting#AUTO_ESTIMATE},
-	 * the image type will be automatically set.
-	 * </p>
-	 * @param imageData the image data to set the image type
-	 */
-	public static void setImageType(ImageData<BufferedImage> imageData) throws IOException {
-		if ((imageData != null) && (imageData.getImageType() == null || imageData.getImageType() == ImageData.ImageType.UNSET)) {
-			var setType = PathPrefs.imageTypeSettingProperty().get();
-			if (setType == PathPrefs.ImageTypeSetting.AUTO_ESTIMATE || setType == PathPrefs.ImageTypeSetting.PROMPT) {
-				var server = imageData.getServer();
-				var type = GuiTools.estimateImageType(server, server.getDefaultThumbnail(0,0));
-				if (setType == PathPrefs.ImageTypeSetting.PROMPT) {
-					ImageDetailsPane.promptToSetImageType(imageData, type);
-				} else {
-					imageData.setImageType(type);
-					imageData.setChanged(false); // Don't want to retain this as a change resulting in a prompt to save the data
-				}
-			}
-		}
 	}
 
 	/**
@@ -529,6 +529,77 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 */
 	public static String getImageBase64(ImageServer<BufferedImage> server, RegionRequest request) throws IOException {
 		return getImageBase64(server, request, "imagej tiff");
+	}
+
+	/**
+	 * Set the image type of the image data.
+	 *
+	 * <p>
+	 * If the image type is not set, it will be estimated.
+	 * If the image type setting is set to {@link PathPrefs.ImageTypeSetting#PROMPT},
+	 * a prompt will be displayed to set the image type.
+	 * If the image type setting is set to {@link PathPrefs.ImageTypeSetting#AUTO_ESTIMATE},
+	 * the image type will be automatically set.
+	 * </p>
+	 * @param imageData the image data to set the image type
+	 */
+	private static void setImageType(ImageData<BufferedImage> imageData) throws IOException {
+		if ((imageData != null) && (imageData.getImageType() == null || imageData.getImageType() == ImageData.ImageType.UNSET)) {
+			var setType = PathPrefs.imageTypeSettingProperty().get();
+			if (setType == PathPrefs.ImageTypeSetting.AUTO_ESTIMATE || setType == PathPrefs.ImageTypeSetting.PROMPT) {
+				ImageData.ImageType type = estimatedImageType(imageData.getServer());
+				if (setType == PathPrefs.ImageTypeSetting.PROMPT) {
+					ImageDetailsPane.promptToSetImageType(imageData, type);
+				} else {
+					imageData.setImageType(type);
+					imageData.setChanged(false); // Don't want to retain this as a change resulting in a prompt to save the data
+				}
+			}
+		}
+	}
+
+	/**
+	 * Estimate the image type of the image server.
+	 *
+	 * @param server the image server to estimate the image type
+	 * @return the estimated image type
+	 * @throws IOException if an error occurs while estimating the image type
+	 * @see GuiTools#estimateImageType(ImageServer, BufferedImage)
+	 */
+	private static ImageData.ImageType estimatedImageType(ImageServer<BufferedImage> server) throws IOException {
+		return GuiTools.estimateImageType(server, server.getDefaultThumbnail(0,0));
+	}
+
+	/**
+	 * Refresh the thumbnail of the image entry.
+	 *
+	 * @param entry  the image entry to refresh the thumbnail
+	 * @param server the image server to get the thumbnail from
+	 * @throws IOException if an error occurs while getting the thumbnail
+	 * @see ProjectCommands#getThumbnailRGB(ImageServer)
+	 * @see ProjectImageEntry#setThumbnail(BufferedImage)
+	 */
+	private static void refreshThumbnail(ProjectImageEntry<BufferedImage> entry, ImageServer<BufferedImage> server) throws IOException {
+		entry.setThumbnail(ProjectCommands.getThumbnailRGB(server));
+	}
+
+	/**
+	 * Save the current image data if it has been changed.
+	 *
+	 * <p>
+	 * If the current image data is not null and has been changed, it will be saved.
+	 * </p>
+	 * @throws IOException if an error occurs while saving the image data
+	 */
+	private static void saveCurrentImageData() throws IOException {
+		var project = getProject();
+		var imageData = getCurrentImageData();
+		if ((project != null) && (imageData != null) && (imageData.isChanged())) {
+			var entry = project.getEntry(imageData);
+			if (entry != null) {
+				entry.saveImageData(imageData);
+			}
+		}
 	}
 
 }
