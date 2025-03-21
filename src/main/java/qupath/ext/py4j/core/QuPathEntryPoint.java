@@ -31,9 +31,26 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	/**
 	 * Refresh the current project in QuPath.
 	 */
-	public static void refreshProject() {
+	public static void refreshProjectInQuPath() {
 		FXUtils.callOnApplicationThread(() -> {
 			getQuPath().refreshProject();
+			return null;
+		});
+	}
+
+	/**
+	 * Refresh the current project in QuPath.
+	 */
+	public static void refreshProject() {
+		refreshProjectInQuPath();
+	}
+
+	/**
+	 * Repaint the entire image in the current Viewer.
+	 */
+	public static void repaintEntireImageInQuPath() {
+		FXUtils.callOnApplicationThread(() -> {
+			getCurrentViewer().repaintEntireImage();
 			return null;
 		});
 	}
@@ -42,10 +59,7 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * Repaint the entire image in the current Viewer.
 	 */
 	public static void repaintEntireImage() {
-		FXUtils.callOnApplicationThread(() -> {
-			getCurrentViewer().repaintEntireImage();
-			return null;
-		});
+		repaintEntireImageInQuPath();
 	}
 
 	/**
@@ -105,8 +119,7 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 			return null;
 		});
 	}
-
-
+	
 //
 //	 comment out these 3 methods
 //	 1. use OpenImageDataInPath(imageData) to open the entry
@@ -217,7 +230,8 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
 	 *      ImageData.ImageType)
 	 */
-	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
+	public static ProjectImageEntry<BufferedImage> addImageEntry(
+			Project<BufferedImage> project,
 			ImageServer<BufferedImage> server,
 			ImageData.ImageType type) throws IOException {
 		var entry = ProjectCommands.addSingleImageToProject(project, server, type);
@@ -233,7 +247,8 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
 	 *      ImageData.ImageType)
 	 */
-	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
+	public static ProjectImageEntry<BufferedImage> addImageEntry(
+			Project<BufferedImage> project,
 			ImageServer<BufferedImage> server) throws IOException {
 		return addImageEntry(project, server, estimatedImageType(server));
 	}
@@ -247,11 +262,11 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @return the added image entry
 	 * @throws IOException if an error occurs while loading the image file
 	 */
-	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
+	public static ProjectImageEntry<BufferedImage> addImageEntry(
+			Project<BufferedImage> project,
 			String imagePath,
 			ImageData.ImageType type) throws IOException {
-		ImageServer<BufferedImage> server = ImageServers.buildServer(imagePath);
-		return addImageEntry(project, server, type);
+		return addImageEntry(project, ImageServers.buildServer(imagePath), type);
 	}
 
 	/**
@@ -261,10 +276,10 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @return the added image entry
 	 * @throws IOException if an error occurs while loading the image file
 	 */
-	public static ProjectImageEntry<BufferedImage> addImageEntry(Project<BufferedImage> project,
+	public static ProjectImageEntry<BufferedImage> addImageEntry(
+			Project<BufferedImage> project,
 			String imagePath) throws IOException {
-		ImageServer<BufferedImage> server = ImageServers.buildServer(imagePath);
-		return addImageEntry(project, server);
+		return addImageEntry(project, ImageServers.buildServer(imagePath));
 	}
 
 	/**
@@ -275,7 +290,8 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @param removeAllData whether to remove all data associated with the image
 	 *                      entry
 	 */
-	public static void removeImageEntry(Project<BufferedImage> project,
+	public static void removeImageEntry(
+			Project<BufferedImage> project,
 			ProjectImageEntry<BufferedImage> entry,
 			boolean removeAllData) {
 		project.removeImage(entry, removeAllData);
@@ -287,7 +303,8 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @param project the project to remove the image entry from
 	 * @param entry   the image entry to remove
 	 */
-	public static void removeImageEntry(Project<BufferedImage> project,
+	public static void removeImageEntry(
+			Project<BufferedImage> project,
 			ProjectImageEntry<BufferedImage> entry) {
 		project.removeImage(entry, true);
 	}
@@ -299,7 +316,9 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @param type the image type
 	 * @return the created image data
 	 */
-	public static ImageData<BufferedImage> createImageData(ImageServer<BufferedImage> server, ImageData.ImageType type) throws IOException {
+	public static ImageData<BufferedImage> createImageData(
+			ImageServer<BufferedImage> server,
+			ImageData.ImageType type) throws IOException {
 		return new ImageData<BufferedImage>(server, type);
 	}
 
@@ -310,7 +329,9 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @param type the image type
 	 * @return the created image data
 	 */
-	public static ImageData<BufferedImage> createImageData(String imagePath, ImageData.ImageType type) throws IOException {
+	public static ImageData<BufferedImage> createImageData(
+			String imagePath,
+			ImageData.ImageType type) throws IOException {
 		return createImageData(ImageServers.buildServer(imagePath), type);
 	}
 
@@ -335,6 +356,25 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	}
 
 	/**
+	 * Save the current image data if it has been changed.
+	 *
+	 * <p>
+	 * If the current image data is not null and has been changed, it will be saved.
+	 * </p>
+	 * @throws IOException if an error occurs while saving the image data
+	 */
+	public static void saveCurrentImageData() throws IOException {
+		var project = getProject();
+		var imageData = getCurrentImageData();
+		if ((project != null) && (imageData != null) && (imageData.isChanged())) {
+			var entry = project.getEntry(imageData);
+			if (entry != null) {
+				entry.saveImageData(imageData);
+			}
+		}
+	}
+
+	/**
 	 * Create a new image server.
 	 *
 	 * @param imagePath the path to the image
@@ -352,7 +392,8 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @param jsonServerPath the path to save the image server to
 	 * @throws IOException if an error occurs while saving the image server
 	 */
-	public static void saveImageServer(ImageServer<BufferedImage> server,
+	public static void saveImageServer(
+			ImageServer<BufferedImage> server,
 			String jsonServerPath) throws IOException {
 		try (FileWriter writer = new FileWriter(jsonServerPath)) {
 			String serverJson = GsonTools.getInstance().toJson(server);
@@ -382,7 +423,8 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
 	 *      ImageData.ImageType)
 	 */
-	public static ProjectImageEntry<BufferedImage> addImage(Project<BufferedImage> project,
+	public static ProjectImageEntry<BufferedImage> addImage(
+			Project<BufferedImage> project,
 			ImageServer<BufferedImage> server,
 			ImageData.ImageType type) throws IOException {
 		return addImageEntry(project, server, type);
@@ -396,7 +438,8 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
 	 *      ImageData.ImageType)
 	 */
-	public static ProjectImageEntry<BufferedImage> addImage(Project<BufferedImage> project,
+	public static ProjectImageEntry<BufferedImage> addImage(
+			Project<BufferedImage> project,
 			ImageServer<BufferedImage> server) throws IOException {
 		return addImageEntry(project, server);
 	}
@@ -410,7 +453,8 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @return the added image entry
 	 * @throws IOException if an error occurs while loading the image file
 	 */
-	public static ProjectImageEntry<BufferedImage> addImage(Project<BufferedImage> project,
+	public static ProjectImageEntry<BufferedImage> addImage(
+			Project<BufferedImage> project,
 			String imagePath,
 			ImageData.ImageType type) throws IOException {
 		return addImageEntry(project, imagePath, type);
@@ -423,7 +467,8 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @return the added image entry
 	 * @throws IOException if an error occurs while loading the image file
 	 */
-	public static ProjectImageEntry<BufferedImage> addImage(Project<BufferedImage> project,
+	public static ProjectImageEntry<BufferedImage> addImage(
+			Project<BufferedImage> project,
 			String imagePath) throws IOException {
 		return addImageEntry(project, imagePath);
 	}
@@ -438,7 +483,9 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 *         tiff' format
 	 * @throws IOException when an error occurs while reading the image
 	 */
-	public static byte[] getImageBytes(ImageServer<BufferedImage> server, double downsample) throws IOException {
+	public static byte[] getImageBytes(
+			ImageServer<BufferedImage> server,
+			double downsample) throws IOException {
 		return getImageBytes(server, downsample, "imagej tiff");
 	}
 
@@ -456,8 +503,10 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 *         tiff' format
 	 * @throws IOException when an error occurs while reading the image
 	 */
-	public static byte[] getImageBytes(ImageServer<BufferedImage> server, double downsample, int x, int y, int width,
-			int height) throws IOException {
+	public static byte[] getImageBytes(
+			ImageServer<BufferedImage> server,
+			double downsample,
+			int x, int y, int width, int height) throws IOException {
 		return getImageBytes(server, downsample, x, y, width, height, "imagej tiff");
 	}
 
@@ -477,8 +526,11 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 *         tiff' format
 	 * @throws IOException when an error occurs while reading the image
 	 */
-	public static byte[] getImageBytes(ImageServer<BufferedImage> server, double downsample, int x, int y, int width,
-			int height, int z, int t) throws IOException {
+	public static byte[] getImageBytes(
+			ImageServer<BufferedImage> server,
+			double downsample,
+			int x, int y, int width, int height,
+			int z, int t) throws IOException {
 		return getImageBytes(server, downsample, x, y, width, height, z, t, "imagej tiff");
 	}
 
@@ -492,7 +544,9 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 *         tiff' format
 	 * @throws IOException when an error occurs while reading the image
 	 */
-	public static byte[] getImageBytes(ImageServer<BufferedImage> server, RegionRequest request) throws IOException {
+	public static byte[] getImageBytes(
+			ImageServer<BufferedImage> server,
+			RegionRequest request) throws IOException {
 		return getImageBytes(server, request, "imagej tiff");
 	}
 
@@ -500,7 +554,9 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * Same as {@link #getImageBytes(ImageServer, double)}, but encoded with the
 	 * {@link Base64} scheme.
 	 */
-	public static String getImageBase64(ImageServer<BufferedImage> server, double downsample) throws IOException {
+	public static String getImageBase64(
+			ImageServer<BufferedImage> server,
+			double downsample) throws IOException {
 		return getImageBase64(server, downsample, "imagej tiff");
 	}
 
@@ -508,8 +564,10 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * Same as {@link #getImageBytes(ImageServer, double, int, int, int, int)}, but
 	 * encoded with the {@link Base64} scheme.
 	 */
-	public static String getImageBase64(ImageServer<BufferedImage> server, double downsample, int x, int y, int width,
-			int height) throws IOException {
+	public static String getImageBase64(
+			ImageServer<BufferedImage> server,
+			double downsample,
+			int x, int y, int width, int height) throws IOException {
 		return getImageBase64(server, downsample, x, y, width, height, "imagej tiff");
 	}
 
@@ -518,8 +576,11 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * {@link #getImageBytes(ImageServer, double, int, int, int, int, int, int)},
 	 * but encoded with the {@link Base64} scheme.
 	 */
-	public static String getImageBase64(ImageServer<BufferedImage> server, double downsample, int x, int y, int width,
-			int height, int z, int t) throws IOException {
+	public static String getImageBase64(
+			ImageServer<BufferedImage> server,
+			double downsample,
+			int x, int y, int width, int height,
+			int z, int t) throws IOException {
 		return getImageBase64(server, downsample, x, y, width, height, z, t, "imagej tiff");
 	}
 
@@ -527,7 +588,9 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * Same as {@link #getImageBytes(ImageServer, RegionRequest)}, but encoded with
 	 * the {@link Base64} scheme.
 	 */
-	public static String getImageBase64(ImageServer<BufferedImage> server, RegionRequest request) throws IOException {
+	public static String getImageBase64(
+			ImageServer<BufferedImage> server,
+			RegionRequest request) throws IOException {
 		return getImageBase64(server, request, "imagej tiff");
 	}
 
@@ -579,27 +642,10 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @see ProjectCommands#getThumbnailRGB(ImageServer)
 	 * @see ProjectImageEntry#setThumbnail(BufferedImage)
 	 */
-	private static void refreshThumbnail(ProjectImageEntry<BufferedImage> entry, ImageServer<BufferedImage> server) throws IOException {
+	private static void refreshThumbnail(
+			ProjectImageEntry<BufferedImage> entry,
+			ImageServer<BufferedImage> server) throws IOException {
 		entry.setThumbnail(ProjectCommands.getThumbnailRGB(server));
-	}
-
-	/**
-	 * Save the current image data if it has been changed.
-	 *
-	 * <p>
-	 * If the current image data is not null and has been changed, it will be saved.
-	 * </p>
-	 * @throws IOException if an error occurs while saving the image data
-	 */
-	private static void saveCurrentImageData() throws IOException {
-		var project = getProject();
-		var imageData = getCurrentImageData();
-		if ((project != null) && (imageData != null) && (imageData.isChanged())) {
-			var entry = project.getEntry(imageData);
-			if (entry != null) {
-				entry.saveImageData(imageData);
-			}
-		}
 	}
 
 }
