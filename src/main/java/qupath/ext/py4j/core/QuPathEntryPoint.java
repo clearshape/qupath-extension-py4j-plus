@@ -283,6 +283,21 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	}
 
 	/**
+	 * Refresh the thumbnail of the image entry.
+	 *
+	 * @param entry  the image entry to refresh the thumbnail
+	 * @param server the image server to get the thumbnail from
+	 * @throws IOException if an error occurs while getting the thumbnail
+	 * @see ProjectCommands#getThumbnailRGB(ImageServer)
+	 * @see ProjectImageEntry#setThumbnail(BufferedImage)
+	 */
+	public static void refreshThumbnail(
+			ProjectImageEntry<BufferedImage> entry,
+			ImageServer<BufferedImage> server) throws IOException {
+		entry.setThumbnail(ProjectCommands.getThumbnailRGB(server));
+	}
+	
+	/**
 	 * Remove an image entry from a project.
 	 *
 	 * @param project       the project to remove the image entry from
@@ -631,21 +646,6 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 */
 	private static ImageData.ImageType estimatedImageType(ImageServer<BufferedImage> server) throws IOException {
 		return GuiTools.estimateImageType(server, server.getDefaultThumbnail(0,0));
-	}
-
-	/**
-	 * Refresh the thumbnail of the image entry.
-	 *
-	 * @param entry  the image entry to refresh the thumbnail
-	 * @param server the image server to get the thumbnail from
-	 * @throws IOException if an error occurs while getting the thumbnail
-	 * @see ProjectCommands#getThumbnailRGB(ImageServer)
-	 * @see ProjectImageEntry#setThumbnail(BufferedImage)
-	 */
-	private static void refreshThumbnail(
-			ProjectImageEntry<BufferedImage> entry,
-			ImageServer<BufferedImage> server) throws IOException {
-		entry.setThumbnail(ProjectCommands.getThumbnailRGB(server));
 	}
 
 }
