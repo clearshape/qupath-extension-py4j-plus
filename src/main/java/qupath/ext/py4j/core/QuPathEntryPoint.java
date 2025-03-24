@@ -98,11 +98,11 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	public static void openImageDataInQuPath(ImageData<BufferedImage> imageData) {
 		FXUtils.callOnApplicationThread(() -> {
 			saveCurrentImageData();
-			getCurrentViewer().setImageData(imageData);
-			if (getProject() != null) {
-				refreshThumbnail(getProjectEntry(), imageData.getServer());
-				refreshProjectInQuPath();
+			if ((getProject() != null) && (getProject().getEntry(imageData) == null)) {
+				closeProjectInQuPath();
 			}
+			getCurrentViewer().setImageData(imageData);
+			getQuPath().refreshProject();
 			return null;
 		});
 	}
@@ -119,7 +119,6 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 		FXUtils.callOnApplicationThread(() -> {
 			saveCurrentImageData();
 			getCurrentViewer().resetImageData();
-	//		refreshProject();
 			return null;
 		});
 	}
@@ -360,6 +359,23 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	}
 
 	/**
+	 * Save the given image data if it has been changed.
+	 *
+	 * @param imageData the image data to save
+	 * @throws IOException if an error occurs while saving the image data
+	 * @see ProjectImageEntry#saveImageData(ImageData)
+	 */
+	public static void saveImageData(ImageData<BufferedImage> imageData) throws IOException {
+		var project = getProject();
+		if ((project != null) && (imageData != null) && (imageData.isChanged())) {
+			var entry = project.getEntry(imageData);
+			if (entry != null) {
+				entry.saveImageData(imageData);
+			}
+		}
+	}
+
+	/**
 	 * Save the current image data if it has been changed.
 	 *
 	 * <p>
@@ -368,14 +384,7 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	 * @throws IOException if an error occurs while saving the image data
 	 */
 	public static void saveCurrentImageData() throws IOException {
-		var project = getProject();
-		var imageData = getCurrentImageData();
-		if ((project != null) && (imageData != null) && (imageData.isChanged())) {
-			var entry = project.getEntry(imageData);
-			if (entry != null) {
-				entry.saveImageData(imageData);
-			}
-		}
+		saveImageData(getCurrentImageData());
 	}
 
 	/**
