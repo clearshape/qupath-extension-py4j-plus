@@ -89,15 +89,14 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	/**
 	 * Open image data in QuPath.
 	 * <p>
-	 * If the current image data has been changed, it will be saved before opening
-	 * the new image data.
+	 * the project imageData does not belong to will be closed
 	 * </p>
 	 *
 	 * @param imageData the image data to open
 	 */
 	public static void openImageDataInQuPath(ImageData<BufferedImage> imageData) {
 		FXUtils.callOnApplicationThread(() -> {
-			saveCurrentImageData();
+//			saveCurrentImageData();
 			if ((getProject() != null) && (getProject().getEntry(imageData) == null)) {
 				closeProjectInQuPath();
 			}
@@ -109,16 +108,14 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 
 	/**
 	 * Close the current image data in QuPath.
-	 * <p>
-	 * If the current image data has been changed, it will be saved before closing it.
-	 * </p>
 	 *
 	 * @return the closed image data
 	 */
 	public static void closeImageDataInQuPath() {
 		FXUtils.callOnApplicationThread(() -> {
-			saveCurrentImageData();
+//			saveCurrentImageData();
 			getCurrentViewer().resetImageData();
+			getQuPath().refreshProject();
 			return null;
 		});
 	}
@@ -378,9 +375,6 @@ public class QuPathEntryPoint extends QuPathEntryPointBase {
 	/**
 	 * Save the current image data if it has been changed.
 	 *
-	 * <p>
-	 * If the current image data is not null and has been changed, it will be saved.
-	 * </p>
 	 * @throws IOException if an error occurs while saving the image data
 	 */
 	public static void saveCurrentImageData() throws IOException {
