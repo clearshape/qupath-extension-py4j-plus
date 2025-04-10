@@ -24,7 +24,7 @@ public class GatewayManager {
         stop();
 
         server = new GatewayServer.GatewayServerBuilder()
-                .entryPoint(new QuPathEntryPoint())
+                .entryPoint(new QuPathEntryPoint2())
                 .javaPort(port > 0 ? port : GatewayServer.DEFAULT_PORT)
                 .authToken(token == null || token.isBlank() ? null : token)
                 .build();
