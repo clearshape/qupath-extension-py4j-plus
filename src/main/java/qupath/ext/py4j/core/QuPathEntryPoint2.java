@@ -78,8 +78,6 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 
 	/**
 	 * Close the current project in QuPath.
-	 *
-	 * @return the closed project
 	 */
 	public static void closeProjectInQuPath() {
 		FXUtils.callOnApplicationThread(() -> {
@@ -110,8 +108,6 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 
 	/**
 	 * Close the current image data in QuPath.
-	 *
-	 * @return the closed image data
 	 */
 	public static void closeImageDataInQuPath() {
 		FXUtils.callOnApplicationThread(() -> {
@@ -425,7 +421,6 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	 * Add an image entry to a project, with a specified image type.
 	 *
 	 * @param project the project to add the image entry to
-	 * @param server  the image server to add
 	 * @param server  the image server to add
 	 * @param type    the image type
 	 * @return the added image entry

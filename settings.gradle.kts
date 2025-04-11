@@ -7,6 +7,7 @@ pluginManagement {
 	}
 }
 
+// specify which version of QuPath the extension is targeting here
 qupath {
 	version = "0.6.0-SNAPSHOT"
 }
