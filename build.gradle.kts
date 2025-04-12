@@ -1,10 +1,26 @@
 plugins {
+	// QuPath Gradle extension convention plugin
+	// 1. configured by qupathExtension { ... }
 	id("qupath-conventions")
-	id("com.gradleup.shadow") version "8.3.5"
+
+	// a core Gradle plugin to publish this extension
+	// 1. configured by publishing { ... }
 	`maven-publish`
+
+	// optional - create a shadow/fat jar that bundle up any non-core dependencies
+	// 1. shadow(...)         - for the dependencies we do not want to bundle
+	// 2. implementation(...) - for the dependencies we want to bundle
+	id("com.gradleup.shadow") version "8.3.5"
+
+	// optional - writing the extension in Groovy
+	// 1. for example, we might want to write QuPathEntryPoint2 in Groovy
+	groovy
 }
 
 // specify the details of the extension here
+// 1. published - to repository 'snapshotsRepoUrl' defined in repositories { ... }
+// 2. located   - in folder 'io/github/qupath/qupath-extension-py4j' of 'snapshotsRepoUrl'
+// 3. *.jar     - in folder '0.1.0-SNAPSHOT' of 'io/github/qupath/qupath-extension-py4j' 
 qupathExtension {
 	name = "qupath-extension-py4j"
 	version = "0.1.0-SNAPSHOT"
@@ -15,26 +31,35 @@ qupathExtension {
 
 dependencies {
 
+	// the dependencies we do not want to bundle
+	// 1. they are already part of QuPath
+	// 2. catalog 'libs' is defined by plugin 'qupath-extension-settings'
+	// 3. BioFormats & Openslide are specified explicitly
+	//    a. not in the core QuPath bundle (libs.bundles.qupath)
 	shadow(libs.bundles.qupath)
 	shadow(libs.bundles.logging)
 	shadow(libs.qupath.fxtras)
 	shadow(libs.ikonli.javafx)
 	shadow(libs.guava)
-	shadow("io.github.qupath:qupath-extension-bioformats:0.6.0-SNAPSHOT")
-	shadow("io.github.qupath:qupath-extension-openslide:0.6.0-SNAPSHOT")
+	shadow(libs.qupath.ext.openslide)
+	shadow(libs.qupath.ext.bioformats)
+//	shadow("io.github.qupath:qupath-extension-bioformats:0.6.0-SNAPSHOT")
+//	shadow("io.github.qupath:qupath-extension-openslide:0.6.0-SNAPSHOT")
 
+	// the dependencies we want to bundle
+	// 1. the extension needs Py4J Java module to work
+	// 2. it is at https://mvnrepository.com/artifact/net.sf.py4j/py4j/0.10.9.7
 	implementation("net.sf.py4j:py4j:0.10.9.7")
-//	implementation("io.github.qupath:qupath-extension-formats:0.6.0-SNAPSHOT")
 
-	// For testing
+	// the dependencies required for testing
 	testImplementation(libs.bundles.qupath)
 	testImplementation(libs.junit)
-
 }
 
+// to configure plugin 'maven-publish'
 publishing {
 	// specify where the repositories are located
-	// 1. ues 'releases' if the module can be found there
+	// 1. use 'releases' if the module can be found there
 	// 2. switch to 'snapshots' if not
 	repositories {
 		maven {

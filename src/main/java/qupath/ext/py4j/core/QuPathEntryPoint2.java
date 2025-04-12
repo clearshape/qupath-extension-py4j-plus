@@ -6,11 +6,15 @@ import qupath.lib.gui.prefs.PathPrefs;
 import qupath.lib.gui.tools.GuiTools;
 import qupath.lib.images.ImageData;
 import qupath.lib.images.servers.ImageServer;
+import qupath.lib.images.servers.ImageServers;
+import qupath.lib.images.servers.openslide.OpenslideServerBuilder;
+import qupath.lib.images.servers.bioformats.BioFormatsServerBuilder;
+import qupath.imagej.images.servers.ImageJServerBuilder;
 import qupath.lib.io.GsonTools;
 import qupath.lib.projects.ProjectImageEntry;
 import qupath.lib.projects.Project;
 import qupath.lib.gui.commands.Commands;
-import qupath.lib.images.servers.ImageServers;
+
 import qupath.lib.projects.Projects;
 import qupath.lib.projects.ProjectIO;
 import qupath.lib.gui.commands.ProjectCommands;
@@ -19,7 +23,9 @@ import qupath.lib.regions.RegionRequest;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.File;
+import java.net.URI;
 import java.io.FileWriter;
+import java.net.URISyntaxException;
 import java.util.Base64;
 
 import qupath.ext.py4j.core.QuPathEntryPoint;
@@ -380,6 +386,36 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
+	 * Create a new ImageJ image server.
+	 * @param imagePath the path to the image
+	 * @return the created image server
+	 * @throws URISyntaxException if the image path is not a valid URI
+	 */
+	public static ImageServer<BufferedImage> createImageJImageServer(String imagePath) throws URISyntaxException {
+		return new ImageJServerBuilder().buildServer(new URI(imagePath));
+	}
+
+	/**
+	 * Create a new BioFormats image server.
+	 * @param imagePath the path to the image
+	 * @return the created image server
+	 * @throws URISyntaxException if the image path is not a valid URI
+	 */
+	public static ImageServer<BufferedImage> createBioFormatsImageServer(String imagePath) throws URISyntaxException {
+		return new BioFormatsServerBuilder().buildServer(new URI(imagePath));
+	}
+
+	/**
+	 * Create a new Openslide image server.
+	 * @param imagePath the path to the image
+	 * @return the created image server
+	 * @throws URISyntaxException if the image path is not a valid URI
+	 */
+	public static ImageServer<BufferedImage> createOpenslideImageServer(String imagePath) throws URISyntaxException {
+		return new OpenslideServerBuilder().buildServer(new URI(imagePath));
+	}
+
+	/**
 	 * Create a new image server.
 	 *
 	 * @param imagePath the path to the image
@@ -644,7 +680,6 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	 * @param server the image server to get the thumbnail from
 	 * @throws IOException if an error occurs while getting the thumbnail
 	 * @see ProjectCommands#getThumbnailRGB(ImageServer)
-	 * @see ProjectImageEntry#setThumbnail(BufferedImage)
 	 */
 	private static void refreshThumbnail(
 			ProjectImageEntry<BufferedImage> entry,
