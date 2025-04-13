@@ -19,8 +19,9 @@ plugins {
 
 // specify the details of the extension here
 // 1. published - to repository 'snapshotsRepoUrl' defined in repositories { ... }
-// 2. located   - in folder 'io/github/qupath/qupath-extension-py4j' of 'snapshotsRepoUrl'
-// 3. *.jar     - in folder '0.1.0-SNAPSHOT' of 'io/github/qupath/qupath-extension-py4j' 
+// 2. group - io.github.qupath
+// 3. name - qupath-extension-py4j-plus
+// 4. version - 0.1.0-SNAPSHOT
 qupathExtension {
 	name = "qupath-extension-py4j-plus"
 	version = "0.1.0-SNAPSHOT"
@@ -44,9 +45,12 @@ dependencies {
 	shadow(libs.qupath.ext.bioformats)
 
 	// the dependencies we want to bundle
-	// 1. the extension needs Py4J Java module to work
-	// 2. it is at https://mvnrepository.com/artifact/net.sf.py4j/py4j/0.10.9.7
+	// 1. "py4j" is optional and kept here for convenience
+	//    a. will have all needed dependencies
+	//    b. when "./gradlew copyDependencies" is executed
+	// 2. "qupath-extension-py4j" is mandatory
 	implementation("net.sf.py4j:py4j:0.10.9.7")
+	implementation("io.github.qupath:qupath-extension-py4j:0.1.0-SNAPSHOT")
 
 	// the dependencies required for testing
 	testImplementation(libs.bundles.qupath)
