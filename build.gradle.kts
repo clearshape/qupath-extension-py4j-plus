@@ -22,7 +22,7 @@ plugins {
 // 2. located   - in folder 'io/github/qupath/qupath-extension-py4j' of 'snapshotsRepoUrl'
 // 3. *.jar     - in folder '0.1.0-SNAPSHOT' of 'io/github/qupath/qupath-extension-py4j' 
 qupathExtension {
-	name = "qupath-extension-py4j"
+	name = "qupath-extension-py4j-plus"
 	version = "0.1.0-SNAPSHOT"
 	group = "io.github.qupath"
 	description = "Connect QuPath to Python using Py4J"
@@ -34,8 +34,7 @@ dependencies {
 	// the dependencies we do not want to bundle
 	// 1. they are already part of QuPath
 	// 2. catalog 'libs' is defined by plugin 'qupath-extension-settings'
-	// 3. BioFormats & Openslide are specified explicitly
-	//    a. not in the core QuPath bundle (libs.bundles.qupath)
+	// 3. BioFormats & Openslide are not part of core QuPath (libs.bundles.qupath)
 	shadow(libs.bundles.qupath)
 	shadow(libs.bundles.logging)
 	shadow(libs.qupath.fxtras)
@@ -43,8 +42,6 @@ dependencies {
 	shadow(libs.guava)
 	shadow(libs.qupath.ext.openslide)
 	shadow(libs.qupath.ext.bioformats)
-//	shadow("io.github.qupath:qupath-extension-bioformats:0.6.0-SNAPSHOT")
-//	shadow("io.github.qupath:qupath-extension-openslide:0.6.0-SNAPSHOT")
 
 	// the dependencies we want to bundle
 	// 1. the extension needs Py4J Java module to work
