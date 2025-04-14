@@ -1,1 +1,0 @@
-typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"qupath.ext.py4j.core","l":"QuPathEntryPoint2"}];updateSearchResults();
