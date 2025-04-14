@@ -23,15 +23,25 @@ plugins {
 // 3. name - qupath-extension-py4j-plus
 // 4. version - 0.1.0-SNAPSHOT
 qupathExtension {
-	name = "qupath-extension-py4j-plus"
-	version = "0.1.0-SNAPSHOT"
+	name = "qupath-extension-py4j"
+	version = "0.1.0-rc1"
 	group = "io.github.qupath"
 	description = "Connect QuPath to Python using Py4J"
 	automaticModule = "qupath.extension.py4j"
 }
 
-dependencies {
+// cross-reference the external QuPath Javadoc
+tasks.javadoc {
+	(options as StandardJavadocDocletOptions).apply {
+		encoding = "UTF-8"
+		charSet = "UTF-8"
 
+		// Cross-reference the external Javadoc for QuPath
+		links("https://qupath.github.io/javadoc/docs/")
+	}
+}
+
+dependencies {
 	// the dependencies we do not want to bundle
 	// 1. they are already part of QuPath
 	// 2. catalog 'libs' is defined by plugin 'qupath-extension-settings'
@@ -50,7 +60,6 @@ dependencies {
 	//    b. when "./gradlew copyDependencies" is executed
 	// 2. "qupath-extension-py4j" is mandatory
 	implementation("net.sf.py4j:py4j:0.10.9.7")
-	implementation("io.github.qupath:qupath-extension-py4j:0.1.0-SNAPSHOT")
 
 	// the dependencies required for testing
 	testImplementation(libs.bundles.qupath)
