@@ -74,7 +74,7 @@ tasks.javadoc {
 		encoding = "UTF-8"
 		charSet = "UTF-8"
 
-		// Cross-reference QuPath & Py4J API docs
+		// Cross-reference QuPath, Py4J & JavaFX API docs
 		links("https://qupath.github.io/javadoc/docs/")
 		links("https://javadoc.io/doc/net.sf.py4j/py4j/0.10.9.7")
 		links("https://openjfx.io/javadoc/21")
