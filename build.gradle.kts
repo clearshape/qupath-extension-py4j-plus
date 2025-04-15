@@ -1,3 +1,8 @@
+import org.gradle.api.tasks.javadoc.Javadoc
+import org.gradle.external.javadoc.StandardJavadocDocletOptions
+import org.gradle.api.tasks.SourceSetContainer
+
+
 plugins {
 	// QuPath Gradle extension convention plugin
 	// 1. configured by qupathExtension { ... }
@@ -17,18 +22,20 @@ plugins {
 	groovy
 }
 
+
 // specify the details of the extension here
 // 1. published - to repository 'snapshotsRepoUrl' defined in repositories { ... }
 // 2. group - io.github.qupath
 // 3. name - qupath-extension-py4j-plus
 // 4. version - 0.1.0-SNAPSHOT
 qupathExtension {
-	name = "qupath-extension-py4j"
+	name = "qupath-extension-py4j-plus"
 	version = "0.1.0-rc1"
 	group = "io.github.qupath"
 	description = "Connect QuPath to Python using Py4J"
 	automaticModule = "qupath.extension.py4j"
 }
+
 
 // cross-reference the external QuPath Javadoc
 tasks.javadoc {
@@ -60,11 +67,13 @@ dependencies {
 	//    b. when "./gradlew copyDependencies" is executed
 	// 2. "qupath-extension-py4j" is mandatory
 	implementation("net.sf.py4j:py4j:0.10.9.7")
+	implementation(project(":qupath-extension-py4j"))
 
 	// the dependencies required for testing
 	testImplementation(libs.bundles.qupath)
 	testImplementation(libs.junit)
 }
+
 
 // to configure plugin 'maven-publish'
 publishing {
@@ -98,4 +107,35 @@ publishing {
 			}
 		}
 	}
+}
+
+
+// Create an aggregated Javadoc task
+tasks.register<Javadoc>("aggregateJavadoc") {
+	group = "documentation"
+	description = "Generates unified Javadoc for the main project and the qupath-extension-py4j subproject."
+
+	// Retrieve the main project's source set
+	val mainSourceSet = (project.extensions.getByName("sourceSets") as SourceSetContainer)["main"]
+	// Retrieve the subproject's source set
+	val subSourceSet = (project(":qupath-extension-py4j").extensions.getByName("sourceSets") as SourceSetContainer)["main"]
+
+	// Combine all Java sources from the main project and the subproject
+	source = files(mainSourceSet.allJava.srcDirs, subSourceSet.allJava.srcDirs).asFileTree
+
+	// Combine the classpaths for compilation from both projects
+	classpath = files(mainSourceSet.compileClasspath, subSourceSet.compileClasspath)
+
+	// Configure Javadoc options
+	(options as StandardJavadocDocletOptions).apply {
+		encoding = "UTF-8"
+		charSet = "UTF-8"
+
+		// Cross-reference external Javadoc (e.g., QuPath API docs)
+		links("https://qupath.github.io/javadoc/docs/")
+	}
+
+	// Ensure that the individual javadoc tasks are executed first
+	dependsOn(tasks.named("javadoc"))
+	dependsOn(project(":qupath-extension-py4j").tasks.named("javadoc"))
 }

@@ -31,8 +31,7 @@ import java.util.Base64;
 import qupath.ext.py4j.core.QuPathEntryPoint;
 
 /**
- * Entry point for use with a Py4J Gateway.
- * This provides useful methods to work with QuPath from Python.
+ * Add more useful methods to QuPathEntryPoint.
  */
 public class QuPathEntryPoint2 extends QuPathEntryPoint {
 
