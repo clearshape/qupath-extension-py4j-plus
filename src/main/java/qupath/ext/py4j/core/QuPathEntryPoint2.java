@@ -31,7 +31,7 @@ import java.util.Base64;
 import qupath.ext.py4j.core.QuPathEntryPoint;
 
 /**
- * Add more useful methods to QuPathEntryPoint.
+ * Add more useful methods to {@link QuPathEntryPoint}.
  */
 public class QuPathEntryPoint2 extends QuPathEntryPoint {
 
@@ -229,6 +229,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	 * @param server  the image server to add
 	 * @param type    the image type, or null (hasImageData() == false)
 	 * @return the added image entry
+	 * @throws IOException if an error occurs while adding the image entry
 	 * <p>The thumbnail of the entry is refreshed.</p>
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
 	 *      ImageData.ImageType)
@@ -244,9 +245,12 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 
 	/**
 	 * Add an image entry to a project, with the estimated image type.
+	 * The thumbnail of the entry is refreshed.
 	 *
 	 * @param project the project to add the image entry to
 	 * @param server  the image server to add
+	 * @return the added image entry
+	 * @throws IOException if an error occurs while adding the image entry
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
 	 *      ImageData.ImageType)
 	 */

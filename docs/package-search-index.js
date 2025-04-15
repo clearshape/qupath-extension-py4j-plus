@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"qupath.ext.py4j.core"}];updateSearchResults();
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"qupath.ext.py4j.core"},{"l":"qupath.ext.py4j.gui"}];updateSearchResults();
