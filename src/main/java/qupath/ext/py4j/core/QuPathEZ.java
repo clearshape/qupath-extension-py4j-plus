@@ -35,13 +35,12 @@ import java.io.File;
 import java.net.URI;
 import java.io.FileWriter;
 import java.net.URISyntaxException;
-import java.util.Base64;
 
 
 /**
  * Add more useful methods on top of {@link QuPathEntryPoint}.
  */
-public class QuPathEntryPoint2 extends QuPathEntryPoint {
+public class QuPathEZ extends QuPathEntryPoint {
 
 	/**
 	 * Refresh the current project {@link QPEx#getProject() getProject()} in QuPath.
@@ -68,7 +67,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Open a project in QuPath.
+	 * Open project <code>project</code> in QuPath.
 	 *
 	 * @param project the project to open
 	 *
@@ -190,7 +189,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 //	}
 
 	/**
-	 * Create a new project at path <code>projectPath</code>.
+	 * Create a new {@link Project} at path <code>projectPath</code>.
 	 * The existing contents of <code>projectPath</code> will be erased.
 	 *
 	 * @param projectPath the path to the project
@@ -209,7 +208,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	 * @throws IOException if an error occurs while saving the project
 	 *
 	 * @see Project#syncChanges()
-	 * @see QuPathEntryPoint2#createProject(String)
+	 * @see QuPathEZ#createProject(String)
 	 */
 	public static void saveProject(Project<BufferedImage> project) throws IOException {
 		if (project != null) {
@@ -218,7 +217,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Load a project from path <code>projectPath</code>.
+	 * Load a {@link Project} from path <code>projectPath</code>.
 	 * The project is defined by JSON file <code>projectPath/project.qpproj</code>.
 	 *
 	 * @param projectPath the path to the project
@@ -236,7 +235,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Add an image server <code>server</code> to project <code>project</code>.
+	 * Add image server <code>server</code> to project <code>project</code>.
 	 * An image entry is returned and its thumbnail is refreshed.
 	 *
 	 * @param project the project to add the image entry to
@@ -246,8 +245,8 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	 *
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
 	 *      ImageData.ImageType)
-	 * @see QuPathEntryPoint2#refreshThumbnail(ProjectImageEntry, ImageServer)
-	 * @see QuPathEntryPoint2#estimatedImageType(ImageServer)
+//	 * @see QuPathEZ#refreshThumbnail(ProjectImageEntry, ImageServer)
+//	 * @see QuPathEZ#estimatedImageType(ImageServer)
 	 */
 	public static ProjectImageEntry<BufferedImage> addImageEntry(
 			Project<BufferedImage> project,
@@ -256,7 +255,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Add an image file <code>imagePath</code> to project <code>project</code>.
+	 * Add image file <code>imagePath</code> to project <code>project</code>.
 	 * An image entry is returned and its thumbnail is refreshed.
 	 *
 	 * @param project the project to add the image entry to
@@ -267,8 +266,8 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
 	 *      ImageData.ImageType)
 	 * @see ImageServers#buildServer(String, String...)
-	 * @see QuPathEntryPoint2#refreshThumbnail(ProjectImageEntry, ImageServer)
-	 * @see QuPathEntryPoint2#estimatedImageType(ImageServer)
+//	 * @see QuPathEZ#refreshThumbnail(ProjectImageEntry, ImageServer)
+//	 * @see QuPathEZ#estimatedImageType(ImageServer)
 	 */
 	public static ProjectImageEntry<BufferedImage> addImageEntry(
 			Project<BufferedImage> project,
@@ -292,24 +291,24 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Create a new image data using image server <code>server</code>.
+	 * Create a new {@link ImageData} for image server <code>server</code>.
 	 *
 	 * @param server the image server to create the image data from
 	 * @return the created image data
 	 *
-	 * @see QuPathEntryPoint2#estimatedImageType(ImageServer)
+//	 * @see QuPathEZ#estimatedImageType(ImageServer)
 	 */
 	public static ImageData<BufferedImage> createImageData(ImageServer<BufferedImage> server) throws IOException {
 		return createImageData(server, estimatedImageType(server));
 	}
 
 	/**
-	 * Create a new image data using image file <code>imagePath</code>.
+	 * Create a new {@link ImageData} for image file <code>imagePath</code>.
 	 *
 	 * @param imagePath the image file to create the image data from
 	 * @return the created image data
 	 *
-	 * @see QuPathEntryPoint2#estimatedImageType(ImageServer)
+//	 * @see QuPathEZ#estimatedImageType(ImageServer)
 	 * @see ImageServers#buildServer(String, String...)
 	 */
 	public static ImageData<BufferedImage> createImageData(String imagePath) throws IOException {
@@ -317,8 +316,9 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Save image data <code>imageData</code> if it has been changed
-	 * and belongs to the current project {@link QPEx#getProject() getProject()}.
+	 * Save image data <code>imageData</code>.
+	 * Nothing happens unless it has been changed and
+	 * belongs to the current project {@link QPEx#getProject() getProject()}.
 	 *
 	 * @param imageData the image data to save
 	 * @throws IOException if an error occurs while saving the image data
@@ -338,19 +338,20 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Save the current image data {@link QPEx#getCurrentImageData() getCurrentImageData()}
-	 * if it has been changed and belongs to the current project {@link QPEx#getProject() getProject()}.
+	 * Save the current image data {@link QPEx#getCurrentImageData() getCurrentImageData()}.
+	 * Nothing happens unless it has been changed and
+	 * belongs to the current project {@link QPEx#getProject() getProject()}.
 	 *
 	 * @throws IOException if an error occurs while saving the image data
 	 *
-	 * @see QuPathEntryPoint2#saveImageData(ImageData)
+	 * @see QuPathEZ#saveImageData(ImageData)
 	 */
 	public static void saveCurrentImageData() throws IOException {
 		saveImageData(getCurrentImageData());
 	}
 
 	/**
-	 * Create a new ImageJ image server for image file <code>imagePath</code>.
+	 * Create a new {@link ImageJServer} for image file <code>imagePath</code>.
 	 *
 	 * @param imagePath the path to the image
 	 * @return the created image server
@@ -364,7 +365,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Create a new BioFormats image server for image file <code>imagePath</code>.
+	 * Create a new {@link BioFormatsImageServer} for image file <code>imagePath</code>.
 	 *
 	 * @param imagePath the path to the image
 	 * @return the created image server
@@ -378,7 +379,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Create a new Openslide image server for image file <code>imagePath</code>.
+	 * Create a new {@link OpenslideImageServer} for image file <code>imagePath</code>.
 	 *
 	 * @param imagePath the path to the image
 	 * @return the created image server
@@ -392,7 +393,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Create a new image server for image file <code>imagePath</code>.
+	 * Create a new {@link ImageServer} for image file <code>imagePath</code>.
 	 * QuPath will choose correct {@link ImageServerBuilder} to read <code>imagePath</code>.
 	 *
 	 * @param imagePath the path to the image
@@ -427,7 +428,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Load an image server from a JSON file <code>jsonServerPath</code>.
+	 * Load an {@link ImageServer} from a JSON file <code>jsonServerPath</code>.
 	 *
 	 * @param jsonServerPath the path to the JSON file
 	 * @return the loaded image server
@@ -441,36 +442,40 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Read the first z-slice and first time point of the provided image at the
-	 * provided downsample and return an image with the default format 'imagej tiff'.
+	 * Read the first z-slice and first time point of
+	 * the provided image at the provided downsample and
+	 * return an image in the 'imagej tiff' format.
 	 *
-	 * @param server     the image to open
+	 * @param server     the image server to read from
 	 * @param downsample the downsample to use when reading the image
-	 * @return an array of bytes described the requested image with the 'imagej
-	 *         tiff' format
+	 * @return a byte array representing the requested image in the 'imagej tiff' format
 	 * @throws IOException when an error occurs while reading the image
+	 *
+	 * @see QuPathEntryPoint#getImageBytes(ImageServer, double, String)
 	 */
-	public static byte[] getImageBytes(
+	public static byte[] getImage(
 			ImageServer<BufferedImage> server,
 			double downsample) throws IOException {
 		return getImageBytes(server, downsample, "imagej tiff");
 	}
 
 	/**
-	 * Read the first z-slice and first time point of a portion of the provided
-	 * image at the provided downsample and return an image with the default format 'imagej tiff'.
+	 * Read the first z-slice and first time point of
+	 * a portion of the provided image at the provided downsample and
+	 * return an image in the 'imagej tiff' format.
 	 *
-	 * @param server     the image to open
+	 * @param server     the image server to read from
 	 * @param downsample the downsample to use when reading the image
 	 * @param x          the x-coordinate of the portion of the image to retrieve
 	 * @param y          the y-coordinate of the portion of the image to retrieve
 	 * @param width      the width of the portion of the image to retrieve
 	 * @param height     the height of the portion of the image to retrieve
-	 * @return an array of bytes described the requested image with the 'imagej
-	 *         tiff' format
+	 * @return a byte array representing the requested image in the 'imagej tiff' format
 	 * @throws IOException when an error occurs while reading the image
+	 *
+	 * @see QuPathEntryPoint#getImageBytes(ImageServer, double, int, int, int, int, String)
 	 */
-	public static byte[] getImageBytes(
+	public static byte[] getImage(
 			ImageServer<BufferedImage> server,
 			double downsample,
 			int x, int y, int width, int height) throws IOException {
@@ -478,10 +483,10 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Read a portion of the provided image at the provided downsample and return an
-	 * image with the default format 'imagej tiff'.
+	 * Read a portion of the provided image at the provided downsample and
+	 * return an image in the 'imagej tiff' format.
 	 *
-	 * @param server     the image to open
+	 * @param server     the image server to read from
 	 * @param downsample the downsample to use when reading the image
 	 * @param x          the x-coordinate of the portion of the image to retrieve
 	 * @param y          the y-coordinate of the portion of the image to retrieve
@@ -489,11 +494,12 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	 * @param height     the height of the portion of the image to retrieve
 	 * @param z          the z-slice of the image to retrieve
 	 * @param t          the time point of the image to retrieve
-	 * @return an array of bytes described the requested image with the 'imagej
-	 *         tiff' format
+	 * @return a byte array representing the requested image in the 'imagej tiff' format
 	 * @throws IOException when an error occurs while reading the image
+	 *
+	 * @see QuPathEntryPoint#getImageBytes(ImageServer, double, int, int, int, int, int, int, String)
 	 */
-	public static byte[] getImageBytes(
+	public static byte[] getImage(
 			ImageServer<BufferedImage> server,
 			double downsample,
 			int x, int y, int width, int height,
@@ -502,78 +508,35 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Read a portion of the provided image and return an image with the default
-	 * format 'imagej tiff'.
+	 * Read a portion of the provided image and
+	 * return an image in the 'imagej tiff' format.
 	 *
-	 * @param server  the image to open
+	 * @param server  the image server to read from
 	 * @param request the region to read.
-	 * @return an array of bytes described the requested image with the 'imagej
-	 *         tiff' format
+	 * @return a byte array representing the requested image in the 'imagej tiff' format
 	 * @throws IOException when an error occurs while reading the image
+	 *
+	 * @see QuPathEntryPoint#getImageBytes(ImageServer, RegionRequest, String)
 	 */
-	public static byte[] getImageBytes(
+	public static byte[] getImage(
 			ImageServer<BufferedImage> server,
 			RegionRequest request) throws IOException {
 		return getImageBytes(server, request, "imagej tiff");
 	}
 
 	/**
-	 * Same as {@link #getImageBytes(ImageServer, double)}, but encoded with the
-	 * {@link Base64} scheme.
-	 */
-	public static String getImageBase64(
-			ImageServer<BufferedImage> server,
-			double downsample) throws IOException {
-		return getImageBase64(server, downsample, "imagej tiff");
-	}
-
-	/**
-	 * Same as {@link #getImageBytes(ImageServer, double, int, int, int, int)}, but
-	 * encoded with the {@link Base64} scheme.
-	 */
-	public static String getImageBase64(
-			ImageServer<BufferedImage> server,
-			double downsample,
-			int x, int y, int width, int height) throws IOException {
-		return getImageBase64(server, downsample, x, y, width, height, "imagej tiff");
-	}
-
-	/**
-	 * Same as
-	 * {@link #getImageBytes(ImageServer, double, int, int, int, int, int, int)},
-	 * but encoded with the {@link Base64} scheme.
-	 */
-	public static String getImageBase64(
-			ImageServer<BufferedImage> server,
-			double downsample,
-			int x, int y, int width, int height,
-			int z, int t) throws IOException {
-		return getImageBase64(server, downsample, x, y, width, height, z, t, "imagej tiff");
-	}
-
-	/**
-	 * Same as {@link #getImageBytes(ImageServer, RegionRequest)}, but encoded with
-	 * the {@link Base64} scheme.
-	 */
-	public static String getImageBase64(
-			ImageServer<BufferedImage> server,
-			RegionRequest request) throws IOException {
-		return getImageBase64(server, request, "imagej tiff");
-	}
-
-	/**
 	 * Set the image type of image data <code>imageData</code>.
 	 *
 	 * <p>
-	 * If the image type is not set, it will be estimated.
+	 * If the image type is not set, it will be estimated. <br>
 	 * If the image type setting is set to {@link PathPrefs.ImageTypeSetting#PROMPT},
-	 * a prompt will be displayed to set the image type.
+	 * a prompt will be displayed to set the image type. <br>
 	 * If the image type setting is set to {@link PathPrefs.ImageTypeSetting#AUTO_ESTIMATE},
 	 * the image type will be automatically set.
 	 * </p>
 	 * @param imageData the image data to set the image type
 	 */
-	public static void setImageType(ImageData<BufferedImage> imageData) throws IOException {
+	private static void setImageType(ImageData<BufferedImage> imageData) throws IOException {
 		if ((imageData != null) && (imageData.getImageType() == null || imageData.getImageType() == ImageData.ImageType.UNSET)) {
 			var setType = PathPrefs.imageTypeSettingProperty().get();
 			if (setType == PathPrefs.ImageTypeSetting.AUTO_ESTIMATE || setType == PathPrefs.ImageTypeSetting.PROMPT) {
@@ -599,12 +562,13 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	 * @see ImageServer#getDefaultThumbnail(int, int)
 	 * @see GuiTools#estimateImageType(ImageServer, BufferedImage)
 	 */
-	public static ImageData.ImageType estimatedImageType(ImageServer<BufferedImage> server) throws IOException {
+	private static ImageData.ImageType estimatedImageType(ImageServer<BufferedImage> server) throws IOException {
 		return GuiTools.estimateImageType(server, server.getDefaultThumbnail(0,0));
 	}
 
 	/**
-	 * Refresh the thumbnail of the image entry.
+	 * Refresh the thumbnail of the image entry <code>entry</code>
+	 * using the thumbnail of the image server <code>server</code>.
 	 *
 	 * @param entry  the image entry to refresh the thumbnail
 	 * @param server the image server to get the thumbnail from
@@ -613,7 +577,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	 * @see ProjectCommands#getThumbnailRGB(ImageServer)
 	 * @see ProjectImageEntry#setThumbnail
 	 */
-	public static void refreshThumbnail(
+	private static void refreshThumbnail(
 			ProjectImageEntry<BufferedImage> entry,
 			ImageServer<BufferedImage> server) throws IOException {
 		entry.setThumbnail(ProjectCommands.getThumbnailRGB(server));
