@@ -31,7 +31,7 @@ import java.util.Base64;
 import qupath.ext.py4j.core.QuPathEntryPoint;
 
 /**
- * Add more useful methods to {@link QuPathEntryPoint}.
+ * Add more useful methods on top of {@link QuPathEntryPoint}.
  */
 public class QuPathEntryPoint2 extends QuPathEntryPoint {
 

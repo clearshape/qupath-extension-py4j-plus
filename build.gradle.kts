@@ -1,8 +1,3 @@
-import org.gradle.api.tasks.javadoc.Javadoc
-import org.gradle.external.javadoc.StandardJavadocDocletOptions
-import org.gradle.api.tasks.SourceSetContainer
-
-
 plugins {
 	id("com.gradleup.shadow") version "8.3.5"
 	id("qupath-conventions")
@@ -16,6 +11,23 @@ qupathExtension {
 	group = "io.github.qupath"
 	description = "Connect QuPath to Python using Py4J"
 	automaticModule = "qupath.extension.py4j"
+}
+
+
+// configure task 'javadoc'
+tasks.javadoc {
+	// generate Javadoc based on the source codes of both projects
+	source = sourceSets["main"].allJava +
+			project(":qupath-extension-py4j").sourceSets["main"].allJava
+	// needed to access the dependencies of both projects to resolve all referenced types
+	classpath = sourceSets["main"].compileClasspath +
+			project(":qupath-extension-py4j").sourceSets["main"].compileClasspath
+	// cross-reference the external document APIs
+	(options as StandardJavadocDocletOptions).apply {
+		links("https://qupath.github.io/javadoc/docs/")
+		links("https://javadoc.io/doc/net.sf.py4j/py4j/0.10.9.7")
+		links("https://openjfx.io/javadoc/21")
+	}
 }
 
 
@@ -68,47 +80,3 @@ publishing {
 }
 
 
-// cross-reference the external Javadoc
-tasks.javadoc {
-	(options as StandardJavadocDocletOptions).apply {
-		encoding = "UTF-8"
-		charSet = "UTF-8"
-
-		// Cross-reference QuPath, Py4J & JavaFX API docs
-		links("https://qupath.github.io/javadoc/docs/")
-		links("https://javadoc.io/doc/net.sf.py4j/py4j/0.10.9.7")
-		links("https://openjfx.io/javadoc/21")
-	}
-}
-
-
-tasks.register<Javadoc>("mergeJavadoc") {
-	group = "documentation"
-	description = "Generates unified Javadoc for the main project and the qupath-extension-py4j subproject."
-
-	// Retrieve the main project's source set
-	val mainSourceSet = (project.extensions.getByName("sourceSets") as SourceSetContainer)["main"]
-	// Retrieve the subproject's source set
-	val subSourceSet = (project(":qupath-extension-py4j").extensions.getByName("sourceSets") as SourceSetContainer)["main"]
-
-	// Combine all Java sources from the main project and the subproject
-	source = files(mainSourceSet.allJava.srcDirs, subSourceSet.allJava.srcDirs).asFileTree
-
-	// Combine the classpaths for compilation from both projects
-	classpath = files(mainSourceSet.compileClasspath, subSourceSet.compileClasspath)
-
-	// cross-reference the external Javadoc
-	(options as StandardJavadocDocletOptions).apply {
-		encoding = "UTF-8"
-		charSet = "UTF-8"
-
-		// Cross-reference QuPath & Py4J API docs
-		links("https://qupath.github.io/javadoc/docs/")
-		links("https://javadoc.io/doc/net.sf.py4j/py4j/0.10.9.7")
-		links("https://openjfx.io/javadoc/21")
-	}
-
-	// Ensure that the individual javadoc tasks are executed first
-	dependsOn(tasks.named("javadoc"))
-	dependsOn(project(":qupath-extension-py4j").tasks.named("javadoc"))
-}
