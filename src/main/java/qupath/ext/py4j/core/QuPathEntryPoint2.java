@@ -1,5 +1,14 @@
 package qupath.ext.py4j.core;
 
+import qupath.lib.gui.scripting.QPEx;
+import qupath.lib.gui.QuPathGUI;
+import qupath.lib.gui.viewer.QuPathViewer;
+import qupath.imagej.images.servers.ImageJServer;
+import qupath.lib.images.servers.bioformats.BioFormatsImageServer;
+import qupath.lib.images.servers.openslide.OpenslideImageServer;
+import qupath.lib.images.servers.ImageServerBuilder;
+import com.google.gson.Gson;
+
 import qupath.fx.utils.FXUtils;
 import qupath.lib.gui.panes.ImageDetailsPane;
 import qupath.lib.gui.prefs.PathPrefs;
@@ -28,7 +37,6 @@ import java.io.FileWriter;
 import java.net.URISyntaxException;
 import java.util.Base64;
 
-import qupath.ext.py4j.core.QuPathEntryPoint;
 
 /**
  * Add more useful methods on top of {@link QuPathEntryPoint}.
@@ -36,7 +44,9 @@ import qupath.ext.py4j.core.QuPathEntryPoint;
 public class QuPathEntryPoint2 extends QuPathEntryPoint {
 
 	/**
-	 * Refresh the current project in QuPath.
+	 * Refresh the current project {@link QPEx#getProject() getProject()} in QuPath.
+	 *
+	 * @see QuPathGUI#refreshProject()
 	 */
 	public static void refreshProjectInQuPath() {
 		FXUtils.callOnApplicationThread(() -> {
@@ -46,14 +56,9 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Refresh the current project in QuPath.
-	 */
-	public static void refreshProject() {
-		refreshProjectInQuPath();
-	}
-
-	/**
-	 * Repaint the entire image in the current Viewer.
+	 * Repaint the entire image in the current Viewer {@link QPEx#getCurrentViewer() getCurrentViewer()}.
+	 *
+	 * @see QuPathViewer#repaintEntireImage()
 	 */
 	public static void repaintEntireImageInQuPath() {
 		FXUtils.callOnApplicationThread(() -> {
@@ -63,16 +68,11 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Repaint the entire image in the current Viewer.
-	 */
-	public static void repaintEntireImage() {
-		repaintEntireImageInQuPath();
-	}
-
-	/**
 	 * Open a project in QuPath.
 	 *
 	 * @param project the project to open
+	 *
+	 * @see QuPathGUI#setProject(Project)
 	 */
 	public static void openProjectInQuPath(Project<BufferedImage> project) {
 		FXUtils.callOnApplicationThread(() -> {
@@ -82,7 +82,9 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Close the current project in QuPath.
+	 * Close the current project {@link QPEx#getProject() getProject()} in QuPath.
+	 *
+	 * @see Commands#closeProject(QuPathGUI)
 	 */
 	public static void closeProjectInQuPath() {
 		FXUtils.callOnApplicationThread(() -> {
@@ -92,12 +94,13 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Open image data in QuPath.
-	 * <p>
-	 * the project imageData does not belong to will be closed
-	 * </p>
+	 * Open image <code>imageData</code> in QuPath.
+	 * The current project will be closed
+	 * if it does not contain <code>imageData</code>
 	 *
-	 * @param imageData the image data to open
+	 * @param imageData the image to open
+	 *
+	 * @see QuPathViewer#setImageData(ImageData)
 	 */
 	public static void openImageDataInQuPath(ImageData<BufferedImage> imageData) {
 		FXUtils.callOnApplicationThread(() -> {
@@ -112,7 +115,9 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Close the current image data in QuPath.
+	 * Close the current image {@link QPEx#getCurrentImageData() getCurrentImageData()} in QuPath.
+	 *
+	 * @see QuPathViewer#resetImageData()
 	 */
 	public static void closeImageDataInQuPath() {
 		FXUtils.callOnApplicationThread(() -> {
@@ -185,7 +190,8 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 //	}
 
 	/**
-	 * Create a new project.
+	 * Create a new project at path <code>projectPath</code>.
+	 * The existing contents of <code>projectPath</code> will be erased.
 	 *
 	 * @param projectPath the path to the project
 	 * @return the created project
@@ -196,10 +202,14 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Save a project.
+	 * Save project <code>project</code> to its associated path
+	 * <code>project</code>.{@link Project#getPath() getPath()}.
 	 *
 	 * @param project the project to save
 	 * @throws IOException if an error occurs while saving the project
+	 *
+	 * @see Project#syncChanges()
+	 * @see QuPathEntryPoint2#createProject(String)
 	 */
 	public static void saveProject(Project<BufferedImage> project) throws IOException {
 		if (project != null) {
@@ -208,11 +218,14 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Load a project.
+	 * Load a project from path <code>projectPath</code>.
+	 * The project is defined by JSON file <code>projectPath/project.qpproj</code>.
 	 *
 	 * @param projectPath the path to the project
 	 * @return the loaded project
 	 * @throws IOException if an error occurs while loading the project
+	 *
+	 * @see ProjectIO#loadProject(File, Class)
 	 */
 	public static Project<BufferedImage> loadProject(String projectPath) throws IOException {
 		File file = new File(projectPath);
@@ -223,36 +236,18 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Add an image entry to a project, with a specified image type.
+	 * Add an image server <code>server</code> to project <code>project</code>.
+	 * An image entry is returned and its thumbnail is refreshed.
 	 *
 	 * @param project the project to add the image entry to
-	 * @param server  the image server to add
-	 * @param type    the image type, or null (hasImageData() == false)
+	 * @param server  the image server used to create the image entry
 	 * @return the added image entry
 	 * @throws IOException if an error occurs while adding the image entry
-	 * <p>The thumbnail of the entry is refreshed.</p>
-	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
-	 *      ImageData.ImageType)
-	 */
-	public static ProjectImageEntry<BufferedImage> addImageEntry(
-			Project<BufferedImage> project,
-			ImageServer<BufferedImage> server,
-			ImageData.ImageType type) throws IOException {
-		var entry = ProjectCommands.addSingleImageToProject(project, server, type);
-		refreshThumbnail(entry, server);	// refresh its thumbnail
-		return entry;
-	}
-
-	/**
-	 * Add an image entry to a project, with the estimated image type.
-	 * The thumbnail of the entry is refreshed.
 	 *
-	 * @param project the project to add the image entry to
-	 * @param server  the image server to add
-	 * @return the added image entry
-	 * @throws IOException if an error occurs while adding the image entry
 	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
 	 *      ImageData.ImageType)
+	 * @see QuPathEntryPoint2#refreshThumbnail(ProjectImageEntry, ImageServer)
+	 * @see QuPathEntryPoint2#estimatedImageType(ImageServer)
 	 */
 	public static ProjectImageEntry<BufferedImage> addImageEntry(
 			Project<BufferedImage> project,
@@ -261,27 +256,19 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Add an image entry to a project, with a specified image type.
+	 * Add an image file <code>imagePath</code> to project <code>project</code>.
+	 * An image entry is returned and its thumbnail is refreshed.
 	 *
-	 * @param project   the project to add the image entry to
-	 * @param imagePath the image file to add
-	 * @param type      the image type, or null (hasImageData() == false)
+	 * @param project the project to add the image entry to
+	 * @param imagePath  the image file used to create the image entry
 	 * @return the added image entry
-	 * @throws IOException if an error occurs while loading the image file
-	 */
-	public static ProjectImageEntry<BufferedImage> addImageEntry(
-			Project<BufferedImage> project,
-			String imagePath,
-			ImageData.ImageType type) throws IOException {
-		return addImageEntry(project, ImageServers.buildServer(imagePath), type);
-	}
-
-	/**
-	 * Add an image entry to a project, with the estimated image type.
+	 * @throws IOException if an error occurs while adding the image entry
 	 *
-	 * @param project   the project to add the image entry to
-	 * @return the added image entry
-	 * @throws IOException if an error occurs while loading the image file
+	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
+	 *      ImageData.ImageType)
+	 * @see ImageServers#buildServer(String, String...)
+	 * @see QuPathEntryPoint2#refreshThumbnail(ProjectImageEntry, ImageServer)
+	 * @see QuPathEntryPoint2#estimatedImageType(ImageServer)
 	 */
 	public static ProjectImageEntry<BufferedImage> addImageEntry(
 			Project<BufferedImage> project,
@@ -290,25 +277,13 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Remove an image entry from a project.
-	 *
-	 * @param project       the project to remove the image entry from
-	 * @param entry         the image entry to remove
-	 * @param removeAllData whether to remove all data associated with the image
-	 *                      entry
-	 */
-	public static void removeImageEntry(
-			Project<BufferedImage> project,
-			ProjectImageEntry<BufferedImage> entry,
-			boolean removeAllData) {
-		project.removeImage(entry, removeAllData);
-	}
-
-	/**
-	 * Remove an image entry (including associated data) from a project.
+	 * Remove image entry <code>entry</code> from project <code>project</code>.
+	 * All associated data will be removed.
 	 *
 	 * @param project the project to remove the image entry from
 	 * @param entry   the image entry to remove
+	 *
+	 * @see Project#removeImage(ProjectImageEntry, boolean)
 	 */
 	public static void removeImageEntry(
 			Project<BufferedImage> project,
@@ -317,56 +292,39 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Create a new image data with the specified image type.
-	 *
-	 * @param server the image server to create the image data from
-	 * @param type the image type
-	 * @return the created image data
-	 */
-	public static ImageData<BufferedImage> createImageData(
-			ImageServer<BufferedImage> server,
-			ImageData.ImageType type) throws IOException {
-		return new ImageData<BufferedImage>(server, type);
-	}
-
-	/**
-	 * Create a new image data with the specified image type.
-	 *
-	 * @param imagePath the image file to create the image data from
-	 * @param type the image type
-	 * @return the created image data
-	 */
-	public static ImageData<BufferedImage> createImageData(
-			String imagePath,
-			ImageData.ImageType type) throws IOException {
-		return createImageData(ImageServers.buildServer(imagePath), type);
-	}
-
-	/**
-	 * Create a new image data with the estimated image type.
+	 * Create a new image data using image server <code>server</code>.
 	 *
 	 * @param server the image server to create the image data from
 	 * @return the created image data
+	 *
+	 * @see QuPathEntryPoint2#estimatedImageType(ImageServer)
 	 */
 	public static ImageData<BufferedImage> createImageData(ImageServer<BufferedImage> server) throws IOException {
 		return createImageData(server, estimatedImageType(server));
 	}
 
 	/**
-	 * Create a new image data with the estimated image type.
+	 * Create a new image data using image file <code>imagePath</code>.
 	 *
 	 * @param imagePath the image file to create the image data from
 	 * @return the created image data
+	 *
+	 * @see QuPathEntryPoint2#estimatedImageType(ImageServer)
+	 * @see ImageServers#buildServer(String, String...)
 	 */
 	public static ImageData<BufferedImage> createImageData(String imagePath) throws IOException {
 		return createImageData(ImageServers.buildServer(imagePath));
 	}
 
 	/**
-	 * Save the given image data if it has been changed.
+	 * Save image data <code>imageData</code> if it has been changed
+	 * and belongs to the current project {@link QPEx#getProject() getProject()}.
 	 *
 	 * @param imageData the image data to save
 	 * @throws IOException if an error occurs while saving the image data
+	 *
+	 * @see ImageData#isChanged()
+	 * @see Project#getEntry(ImageData)
 	 * @see ProjectImageEntry#saveImageData(ImageData)
 	 */
 	public static void saveImageData(ImageData<BufferedImage> imageData) throws IOException {
@@ -380,61 +338,84 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Save the current image data if it has been changed.
+	 * Save the current image data {@link QPEx#getCurrentImageData() getCurrentImageData()}
+	 * if it has been changed and belongs to the current project {@link QPEx#getProject() getProject()}.
 	 *
 	 * @throws IOException if an error occurs while saving the image data
+	 *
+	 * @see QuPathEntryPoint2#saveImageData(ImageData)
 	 */
 	public static void saveCurrentImageData() throws IOException {
 		saveImageData(getCurrentImageData());
 	}
 
 	/**
-	 * Create a new ImageJ image server.
+	 * Create a new ImageJ image server for image file <code>imagePath</code>.
+	 *
 	 * @param imagePath the path to the image
 	 * @return the created image server
-	 * @throws URISyntaxException if the image path is not a valid URI
+	 * @throws URISyntaxException if the image path is not a valid {@link URI}
+	 *
+	 * @see ImageJServerBuilder#buildServer(URI, String...)
+	 * @see ImageJServer#dumpMetadata()
 	 */
 	public static ImageServer<BufferedImage> createImageJImageServer(String imagePath) throws URISyntaxException {
 		return new ImageJServerBuilder().buildServer(new URI(imagePath));
 	}
 
 	/**
-	 * Create a new BioFormats image server.
+	 * Create a new BioFormats image server for image file <code>imagePath</code>.
+	 *
 	 * @param imagePath the path to the image
 	 * @return the created image server
-	 * @throws URISyntaxException if the image path is not a valid URI
+	 * @throws URISyntaxException if the image path is not a valid {@link URI}
+	 *
+	 * @see BioFormatsServerBuilder#buildServer(URI, String...)
+	 * @see BioFormatsImageServer#dumpMetadata()
 	 */
 	public static ImageServer<BufferedImage> createBioFormatsImageServer(String imagePath) throws URISyntaxException {
 		return new BioFormatsServerBuilder().buildServer(new URI(imagePath));
 	}
 
 	/**
-	 * Create a new Openslide image server.
+	 * Create a new Openslide image server for image file <code>imagePath</code>.
+	 *
 	 * @param imagePath the path to the image
 	 * @return the created image server
-	 * @throws URISyntaxException if the image path is not a valid URI
+	 * @throws URISyntaxException if the image path is not a valid {@link URI}
+	 *
+	 * @see OpenslideServerBuilder#buildServer(URI, String...)
+	 * @see OpenslideImageServer#dumpMetadata()
 	 */
 	public static ImageServer<BufferedImage> createOpenslideImageServer(String imagePath) throws URISyntaxException {
 		return new OpenslideServerBuilder().buildServer(new URI(imagePath));
 	}
 
 	/**
-	 * Create a new image server.
+	 * Create a new image server for image file <code>imagePath</code>.
+	 * QuPath will choose correct {@link ImageServerBuilder} to read <code>imagePath</code>.
 	 *
 	 * @param imagePath the path to the image
 	 * @return the created image server
+	 * @throws URISyntaxException if the image path is not a valid {@link URI}
 	 * @throws IOException if an error occurs while loading the image file
+	 *
+	 * @see ImageServers#buildServer(URI, String...)
 	 */
-	public static ImageServer<BufferedImage> createImageServer(String imagePath) throws IOException {
-		return ImageServers.buildServer(imagePath);
+	public static ImageServer<BufferedImage> createImageServer(String imagePath) throws URISyntaxException, IOException {
+		return ImageServers.buildServer(new URI(imagePath));
 	}
 
 	/**
-	 * Save an image server to a JSON file.
+	 * Save image server <code>server</code> to JSON file <code>jsonServerPath</code>.
 	 *
 	 * @param server         the image server to save
 	 * @param jsonServerPath the path to save the image server to
 	 * @throws IOException if an error occurs while saving the image server
+	 *
+	 * @see FileWriter#write(String)
+	 * @see GsonTools#getInstance()
+	 * @see Gson#toJson(Object)
 	 */
 	public static void saveImageServer(
 			ImageServer<BufferedImage> server,
@@ -446,74 +427,17 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Load an image server from a JSON file.
+	 * Load an image server from a JSON file <code>jsonServerPath</code>.
 	 *
 	 * @param jsonServerPath the path to the JSON file
 	 * @return the loaded image server
-	 * @throws IOException if an error occurs while loading the image server
-	 */
-	public static ImageServer<BufferedImage> loadImageServer(String jsonServerPath) throws IOException {
-		return ImageServers.buildServer(jsonServerPath);
-	}
-
-	/**
-	 * Add an image entry to a project, with a specified image type.
-	 *
-	 * @param project the project to add the image entry to
-	 * @param server  the image server to add
-	 * @param type    the image type
-	 * @return the added image entry
-	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
-	 *      ImageData.ImageType)
-	 */
-	public static ProjectImageEntry<BufferedImage> addImage(
-			Project<BufferedImage> project,
-			ImageServer<BufferedImage> server,
-			ImageData.ImageType type) throws IOException {
-		return addImageEntry(project, server, type);
-	}
-
-	/**
-	 * Add an image entry to a project, with an unknown image type.
-	 *
-	 * @param project the project to add the image entry to
-	 * @param server  the image server to add
-	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
-	 *      ImageData.ImageType)
-	 */
-	public static ProjectImageEntry<BufferedImage> addImage(
-			Project<BufferedImage> project,
-			ImageServer<BufferedImage> server) throws IOException {
-		return addImageEntry(project, server);
-	}
-
-	/**
-	 * Add an image entry to a project, with a specified image type.
-	 *
-	 * @param project   the project to add the image entry to
-	 * @param imagePath the image file to add
-	 * @param type      the image type, or null to use the default
-	 * @return the added image entry
+	 * @throws URISyntaxException if the image path is not a valid {@link URI}
 	 * @throws IOException if an error occurs while loading the image file
-	 */
-	public static ProjectImageEntry<BufferedImage> addImage(
-			Project<BufferedImage> project,
-			String imagePath,
-			ImageData.ImageType type) throws IOException {
-		return addImageEntry(project, imagePath, type);
-	}
-
-	/**
-	 * Add an image entry to a project, with an unknown image type.
 	 *
-	 * @param project   the project to add the image entry to
-	 * @return the added image entry
-	 * @throws IOException if an error occurs while loading the image file
+	 * @see ImageServers#buildServer(URI, String...)
 	 */
-	public static ProjectImageEntry<BufferedImage> addImage(
-			Project<BufferedImage> project,
-			String imagePath) throws IOException {
-		return addImageEntry(project, imagePath);
+	public static ImageServer<BufferedImage> loadImageServer(String jsonServerPath) throws URISyntaxException, IOException {
+		return ImageServers.buildServer(new URI(jsonServerPath));
 	}
 
 	/**
@@ -638,7 +562,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Set the image type of the image data.
+	 * Set the image type of image data <code>imageData</code>.
 	 *
 	 * <p>
 	 * If the image type is not set, it will be estimated.
@@ -649,7 +573,7 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	 * </p>
 	 * @param imageData the image data to set the image type
 	 */
-	private static void setImageType(ImageData<BufferedImage> imageData) throws IOException {
+	public static void setImageType(ImageData<BufferedImage> imageData) throws IOException {
 		if ((imageData != null) && (imageData.getImageType() == null || imageData.getImageType() == ImageData.ImageType.UNSET)) {
 			var setType = PathPrefs.imageTypeSettingProperty().get();
 			if (setType == PathPrefs.ImageTypeSetting.AUTO_ESTIMATE || setType == PathPrefs.ImageTypeSetting.PROMPT) {
@@ -665,14 +589,17 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	}
 
 	/**
-	 * Estimate the image type of the image server.
+	 * Estimate the image type of image server <code>server</code>
+	 * using its default thumbnail.
 	 *
 	 * @param server the image server to estimate the image type
 	 * @return the estimated image type
 	 * @throws IOException if an error occurs while estimating the image type
+	 *
+	 * @see ImageServer#getDefaultThumbnail(int, int)
 	 * @see GuiTools#estimateImageType(ImageServer, BufferedImage)
 	 */
-	private static ImageData.ImageType estimatedImageType(ImageServer<BufferedImage> server) throws IOException {
+	public static ImageData.ImageType estimatedImageType(ImageServer<BufferedImage> server) throws IOException {
 		return GuiTools.estimateImageType(server, server.getDefaultThumbnail(0,0));
 	}
 
@@ -682,12 +609,87 @@ public class QuPathEntryPoint2 extends QuPathEntryPoint {
 	 * @param entry  the image entry to refresh the thumbnail
 	 * @param server the image server to get the thumbnail from
 	 * @throws IOException if an error occurs while getting the thumbnail
+	 *
 	 * @see ProjectCommands#getThumbnailRGB(ImageServer)
+	 * @see ProjectImageEntry#setThumbnail
 	 */
-	private static void refreshThumbnail(
+	public static void refreshThumbnail(
 			ProjectImageEntry<BufferedImage> entry,
 			ImageServer<BufferedImage> server) throws IOException {
 		entry.setThumbnail(ProjectCommands.getThumbnailRGB(server));
 	}
-	
+
+	/**
+	 * Add an image server <code>server</code> to project <code>project</code>
+	 * with the specified image type <code>type</code>.
+	 * An image entry is returned and its thumbnail is refreshed after adding it.
+	 *
+	 * @param project the project to add the image entry to
+	 * @param server  the image server used to create the image entry
+	 * @param type    {@link ImageData.ImageType} or null
+	 * @return the added image entry
+	 * @throws IOException if an error occurs while adding the image entry
+	 *
+	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
+	 *      ImageData.ImageType)
+	 */
+	private static ProjectImageEntry<BufferedImage> addImageEntry(
+			Project<BufferedImage> project,
+			ImageServer<BufferedImage> server,
+			ImageData.ImageType type) throws IOException {
+		var entry = ProjectCommands.addSingleImageToProject(project, server, type);
+		refreshThumbnail(entry, server);	// refresh its thumbnail
+		return entry;
+	}
+
+	/**
+	 * Add an image file <code>imagePath</code> to project <code>project</code>
+	 * with the specified image type <code>type</code>.
+	 * An image entry is returned and its thumbnail is refreshed after adding it.
+	 *
+	 * @param project   the project to add the image entry to
+	 * @param imagePath the image file used to create the image entry
+	 * @param type      {@link ImageData.ImageType} or null
+	 * @return the added image entry
+	 * @throws IOException if an error occurs while adding the image entry
+	 *
+	 * @see ProjectCommands#addSingleImageToProject(Project, ImageServer,
+	 *      ImageData.ImageType)
+	 */
+	private static ProjectImageEntry<BufferedImage> addImageEntry(
+			Project<BufferedImage> project,
+			String imagePath,
+			ImageData.ImageType type) throws IOException {
+		return addImageEntry(project, ImageServers.buildServer(imagePath), type);
+	}
+
+	/**
+	 * Create a new image data using image server <code>server</code>
+	 * with the specified image type <code>type</code>.
+	 *
+	 * @param server the image server to create the image data from
+	 * @param type the image type
+	 * @return the created image data
+	 */
+	private static ImageData<BufferedImage> createImageData(
+			ImageServer<BufferedImage> server,
+			ImageData.ImageType type) throws IOException {
+		return new ImageData<BufferedImage>(server, type);
+	}
+
+	/**
+	 * Create a new image data using image file <code>imagePath</code>
+	 * with the specified image type <code>type</code>.
+	 *
+	 * @param imagePath the image file to create the image data from
+	 * @param type the image type
+	 * @return the created image data
+	 *
+	 * @see ImageServers#buildServer(String, String...)
+	 */
+	private static ImageData<BufferedImage> createImageData(
+			String imagePath,
+			ImageData.ImageType type) throws IOException {
+		return createImageData(ImageServers.buildServer(imagePath), type);
+	}
 }
