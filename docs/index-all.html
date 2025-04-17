@@ -49,43 +49,46 @@ loadScripts(document, 'script');</script>
 <div class="header">
 <h1>Index</h1>
 </div>
-<a href="#I:A">A</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:Q">Q</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a>
+<a href="#I:A">A</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:Q">Q</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a>
 <h2 class="title" id="I:A">A</h2>
 <dl class="index">
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#addImageEntry(qupath.lib.projects.Project,java.lang.String)" class="member-name-link">addImageEntry(Project&lt;BufferedImage&gt;, String)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
-<div class="block">Add image file <code>imagePath</code> to project <code>project</code>.</div>
+<div class="block">Add image file <code>imagePath</code> to project <code>project</code> and
+ return its image entry.</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#addImageEntry(qupath.lib.projects.Project,qupath.lib.images.servers.ImageServer)" class="member-name-link">addImageEntry(Project&lt;BufferedImage&gt;, ImageServer&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
-<div class="block">Add image server <code>server</code> to project <code>project</code>.</div>
+<div class="block">Add image server <code>server</code> to project <code>project</code> and
+ return its image entry.</div>
 </dd>
 </dl>
 <h2 class="title" id="I:C">C</h2>
 <dl class="index">
-<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#closeImageDataInQuPath()" class="member-name-link">closeImageDataInQuPath()</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
+<dt><a href="qupath/ext/py4j/core/QuPathFX.html#closeImageDataInQuPath()" class="member-name-link">closeImageDataInQuPath()</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathFX.html" title="class in qupath.ext.py4j.core">QuPathFX</a></dt>
 <dd>
-<div class="block">Close the current image <a href="https://qupath.github.io/javadoc/docs/qupath/lib/scripting/QP.html#getCurrentImageData()" title="class or interface in qupath.lib.scripting" class="external-link"><code>getCurrentImageData()</code></a> in QuPath.</div>
+<div class="block">Close the current image data <a href="https://qupath.github.io/javadoc/docs/qupath/lib/scripting/QP.html#getCurrentImageData()" title="class or interface in qupath.lib.scripting" class="external-link"><code>getCurrentImageData()</code></a>
+ in QuPath.</div>
 </dd>
-<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#closeProjectInQuPath()" class="member-name-link">closeProjectInQuPath()</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
+<dt><a href="qupath/ext/py4j/core/QuPathFX.html#closeProjectInQuPath()" class="member-name-link">closeProjectInQuPath()</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathFX.html" title="class in qupath.ext.py4j.core">QuPathFX</a></dt>
 <dd>
 <div class="block">Close the current project <a href="https://qupath.github.io/javadoc/docs/qupath/lib/scripting/QP.html#getProject()" title="class or interface in qupath.lib.scripting" class="external-link"><code>getProject()</code></a> in QuPath.</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#createBioFormatsImageServer(java.lang.String)" class="member-name-link">createBioFormatsImageServer(String)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
-<div class="block">Create a new <a href="https://qupath.github.io/javadoc/docs/qupath/lib/images/servers/bioformats/BioFormatsImageServer.html" title="class or interface in qupath.lib.images.servers.bioformats" class="external-link"><code>BioFormatsImageServer</code></a> for image file <code>imagePath</code>.</div>
+<div class="block">Create a new <a href="https://qupath.github.io/javadoc/docs/qupath/lib/images/servers/bioformats/BioFormatsImageServer.html" title="class or interface in qupath.lib.images.servers.bioformats" class="external-link"><code>BioFormatsImageServer</code></a> using image file <code>imagePath</code>.</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#createImageData(java.lang.String)" class="member-name-link">createImageData(String)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
-<div class="block">Create a new <a href="https://qupath.github.io/javadoc/docs/qupath/lib/images/ImageData.html" title="class or interface in qupath.lib.images" class="external-link"><code>ImageData</code></a> for image file <code>imagePath</code>.</div>
+<div class="block">Create a new <a href="https://qupath.github.io/javadoc/docs/qupath/lib/images/ImageData.html" title="class or interface in qupath.lib.images" class="external-link"><code>ImageData</code></a> using image file <code>imagePath</code>.</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#createImageData(qupath.lib.images.servers.ImageServer)" class="member-name-link">createImageData(ImageServer&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
-<div class="block">Create a new <a href="https://qupath.github.io/javadoc/docs/qupath/lib/images/ImageData.html" title="class or interface in qupath.lib.images" class="external-link"><code>ImageData</code></a> for image server <code>server</code>.</div>
+<div class="block">Create a new <a href="https://qupath.github.io/javadoc/docs/qupath/lib/images/ImageData.html" title="class or interface in qupath.lib.images" class="external-link"><code>ImageData</code></a> using image server <code>server</code>.</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#createImageJImageServer(java.lang.String)" class="member-name-link">createImageJImageServer(String)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
-<div class="block">Create a new <a href="https://qupath.github.io/javadoc/docs/qupath/imagej/images/servers/ImageJServer.html" title="class or interface in qupath.imagej.images.servers" class="external-link"><code>ImageJServer</code></a> for image file <code>imagePath</code>.</div>
+<div class="block">Create a new <a href="https://qupath.github.io/javadoc/docs/qupath/imagej/images/servers/ImageJServer.html" title="class or interface in qupath.imagej.images.servers" class="external-link"><code>ImageJServer</code></a> using image file <code>imagePath</code>.</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#createImageServer(java.lang.String)" class="member-name-link">createImageServer(String)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
@@ -98,6 +101,14 @@ loadScripts(document, 'script');</script>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#createProject(java.lang.String)" class="member-name-link">createProject(String)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
 <div class="block">Create a new <a href="https://qupath.github.io/javadoc/docs/qupath/lib/projects/Project.html" title="class or interface in qupath.lib.projects" class="external-link"><code>Project</code></a> at path <code>projectPath</code>.</div>
+</dd>
+</dl>
+<h2 class="title" id="I:E">E</h2>
+<dl class="index">
+<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#estimatedImageType(qupath.lib.images.servers.ImageServer)" class="member-name-link">estimatedImageType(ImageServer&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
+<dd>
+<div class="block">Estimate the image type of <code>server</code>
+ using its default thumbnail.</div>
 </dd>
 </dl>
 <h2 class="title" id="I:G">G</h2>
@@ -122,28 +133,6 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEntryPoint.html#getExtensionVersion()" class="member-name-link">getExtensionVersion()</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEntryPoint.html" title="class in qupath.ext.py4j.core">QuPathEntryPoint</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#getImage(qupath.lib.images.servers.ImageServer,double)" class="member-name-link">getImage(ImageServer&lt;BufferedImage&gt;, double)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
-<dd>
-<div class="block">Read the first z-slice and first time point of
- the provided image at the provided downsample and
- return an image in the 'imagej tiff' format.</div>
-</dd>
-<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#getImage(qupath.lib.images.servers.ImageServer,double,int,int,int,int)" class="member-name-link">getImage(ImageServer&lt;BufferedImage&gt;, double, int, int, int, int)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
-<dd>
-<div class="block">Read the first z-slice and first time point of
- a portion of the provided image at the provided downsample and
- return an image in the 'imagej tiff' format.</div>
-</dd>
-<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#getImage(qupath.lib.images.servers.ImageServer,double,int,int,int,int,int,int)" class="member-name-link">getImage(ImageServer&lt;BufferedImage&gt;, double, int, int, int, int, int, int)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
-<dd>
-<div class="block">Read a portion of the provided image at the provided downsample and
- return an image in the 'imagej tiff' format.</div>
-</dd>
-<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#getImage(qupath.lib.images.servers.ImageServer,qupath.lib.regions.RegionRequest)" class="member-name-link">getImage(ImageServer&lt;BufferedImage&gt;, RegionRequest)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
-<dd>
-<div class="block">Read a portion of the provided image and
- return an image in the 'imagej tiff' format.</div>
-</dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEntryPoint.html#getImageBase64(qupath.lib.images.servers.ImageServer,double,int,int,int,int,int,int,java.lang.String)" class="member-name-link">getImageBase64(ImageServer&lt;BufferedImage&gt;, double, int, int, int, int, int, int, String)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEntryPoint.html" title="class in qupath.ext.py4j.core">QuPathEntryPoint</a></dt>
 <dd>
 <div class="block">Same as <a href="qupath/ext/py4j/core/QuPathEntryPoint.html#getImageBytes(qupath.lib.images.servers.ImageServer,double,int,int,int,int,int,int,java.lang.String)"><code>QuPathEntryPoint.getImageBytes(ImageServer, double, int, int, int, int, int, int, String)</code></a>, but encoded with the <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Base64.html" title="class or interface in java.util" class="external-link"><code>Base64</code></a> scheme.</div>
@@ -259,7 +248,7 @@ loadScripts(document, 'script');</script>
 <dl class="index">
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#loadImageServer(java.lang.String)" class="member-name-link">loadImageServer(String)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
-<div class="block">Load an <a href="https://qupath.github.io/javadoc/docs/qupath/lib/images/servers/ImageServer.html" title="class or interface in qupath.lib.images.servers" class="external-link"><code>ImageServer</code></a> from a JSON file <code>jsonServerPath</code>.</div>
+<div class="block">Load an <a href="https://qupath.github.io/javadoc/docs/qupath/lib/images/servers/ImageServer.html" title="class or interface in qupath.lib.images.servers" class="external-link"><code>ImageServer</code></a> from JSON file <code>jsonServerPath</code>.</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#loadProject(java.lang.String)" class="member-name-link">loadProject(String)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
@@ -268,16 +257,17 @@ loadScripts(document, 'script');</script>
 </dl>
 <h2 class="title" id="I:O">O</h2>
 <dl class="index">
-<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#openImageDataInQuPath(qupath.lib.images.ImageData)" class="member-name-link">openImageDataInQuPath(ImageData&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
+<dt><a href="qupath/ext/py4j/core/QuPathFX.html#openImageDataInQuPath(qupath.lib.images.ImageData)" class="member-name-link">openImageDataInQuPath(ImageData&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathFX.html" title="class in qupath.ext.py4j.core">QuPathFX</a></dt>
 <dd>
-<div class="block">Open image <code>imageData</code> in QuPath.</div>
+<div class="block">Open image <code>imageData</code> in the current viewer
+ <a href="https://qupath.github.io/javadoc/docs/qupath/lib/gui/scripting/QPEx.html#getCurrentViewer()" title="class or interface in qupath.lib.gui.scripting" class="external-link"><code>getCurrentViewer()</code></a> in QuPath.</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEntryPoint.html#openInQuPath(qupath.lib.projects.ProjectImageEntry)" class="member-name-link">openInQuPath(ProjectImageEntry&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEntryPoint.html" title="class in qupath.ext.py4j.core">QuPathEntryPoint</a></dt>
 <dd>
 <div class="block">Open the image represented by the specified ProjectImageEntry in the
  current QuPath instance.</div>
 </dd>
-<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#openProjectInQuPath(qupath.lib.projects.Project)" class="member-name-link">openProjectInQuPath(Project&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
+<dt><a href="qupath/ext/py4j/core/QuPathFX.html#openProjectInQuPath(qupath.lib.projects.Project)" class="member-name-link">openProjectInQuPath(Project&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathFX.html" title="class in qupath.ext.py4j.core">QuPathFX</a></dt>
 <dd>
 <div class="block">Open project <code>project</code> in QuPath.</div>
 </dd>
@@ -302,9 +292,15 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html" class="type-name-link" title="class in qupath.ext.py4j.core">QuPathEZ</a> - Class in <a href="qupath/ext/py4j/core/package-summary.html">qupath.ext.py4j.core</a></dt>
 <dd>
-<div class="block">Add more useful methods on top of <a href="qupath/ext/py4j/core/QuPathEntryPoint.html" title="class in qupath.ext.py4j.core"><code>QuPathEntryPoint</code></a>.</div>
+<div class="block">Add more useful methods on top of both <a href="qupath/ext/py4j/core/QuPathEntryPoint.html" title="class in qupath.ext.py4j.core"><code>QuPathEntryPoint</code></a> and <a href="qupath/ext/py4j/core/QuPathFX.html" title="class in qupath.ext.py4j.core"><code>QuPathFX</code></a>.</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#%3Cinit%3E()" class="member-name-link">QuPathEZ()</a> - Constructor for class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="qupath/ext/py4j/core/QuPathFX.html" class="type-name-link" title="class in qupath.ext.py4j.core">QuPathFX</a> - Class in <a href="qupath/ext/py4j/core/package-summary.html">qupath.ext.py4j.core</a></dt>
+<dd>
+<div class="block">Add a few GUI methods on top of <a href="qupath/ext/py4j/core/QuPathEntryPoint.html" title="class in qupath.ext.py4j.core"><code>QuPathEntryPoint</code></a>.</div>
+</dd>
+<dt><a href="qupath/ext/py4j/core/QuPathFX.html#%3Cinit%3E()" class="member-name-link">QuPathFX()</a> - Constructor for class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathFX.html" title="class in qupath.ext.py4j.core">QuPathFX</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="qupath/ext/py4j/gui/QuPathPy4JExtension.html" class="type-name-link" title="class in qupath.ext.py4j.gui">QuPathPy4JExtension</a> - Class in <a href="qupath/ext/py4j/gui/package-summary.html">qupath.ext.py4j.gui</a></dt>
 <dd>
@@ -315,28 +311,38 @@ loadScripts(document, 'script');</script>
 </dl>
 <h2 class="title" id="I:R">R</h2>
 <dl class="index">
-<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#refreshProjectInQuPath()" class="member-name-link">refreshProjectInQuPath()</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
+<dt><a href="qupath/ext/py4j/core/QuPathFX.html#refreshProjectInQuPath()" class="member-name-link">refreshProjectInQuPath()</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathFX.html" title="class in qupath.ext.py4j.core">QuPathFX</a></dt>
 <dd>
 <div class="block">Refresh the current project <a href="https://qupath.github.io/javadoc/docs/qupath/lib/scripting/QP.html#getProject()" title="class or interface in qupath.lib.scripting" class="external-link"><code>getProject()</code></a> in QuPath.</div>
+</dd>
+<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#refreshThumbnail(qupath.lib.projects.ProjectImageEntry,qupath.lib.images.servers.ImageServer)" class="member-name-link">refreshThumbnail(ProjectImageEntry&lt;BufferedImage&gt;, ImageServer&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
+<dd>
+<div class="block">Refresh <code>entry</code>'s thumbnail
+ using <code>server</code>'s "computed" thumbnail.</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#removeImageEntry(qupath.lib.projects.Project,qupath.lib.projects.ProjectImageEntry)" class="member-name-link">removeImageEntry(Project&lt;BufferedImage&gt;, ProjectImageEntry&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
 <div class="block">Remove image entry <code>entry</code> from project <code>project</code>.</div>
 </dd>
-<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#repaintEntireImageInQuPath()" class="member-name-link">repaintEntireImageInQuPath()</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
+<dt><a href="qupath/ext/py4j/core/QuPathFX.html#repaintEntireImageInQuPath()" class="member-name-link">repaintEntireImageInQuPath()</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathFX.html" title="class in qupath.ext.py4j.core">QuPathFX</a></dt>
 <dd>
-<div class="block">Repaint the entire image in the current Viewer <a href="https://qupath.github.io/javadoc/docs/qupath/lib/gui/scripting/QPEx.html#getCurrentViewer()" title="class or interface in qupath.lib.gui.scripting" class="external-link"><code>getCurrentViewer()</code></a>.</div>
+<div class="block">Repaint the entire image in the current viewer
+ <a href="https://qupath.github.io/javadoc/docs/qupath/lib/gui/scripting/QPEx.html#getCurrentViewer()" title="class or interface in qupath.lib.gui.scripting" class="external-link"><code>getCurrentViewer()</code></a> in QuPath.</div>
 </dd>
 </dl>
 <h2 class="title" id="I:S">S</h2>
 <dl class="index">
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#saveCurrentImageData()" class="member-name-link">saveCurrentImageData()</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
-<div class="block">Save the current image data <a href="https://qupath.github.io/javadoc/docs/qupath/lib/scripting/QP.html#getCurrentImageData()" title="class or interface in qupath.lib.scripting" class="external-link"><code>getCurrentImageData()</code></a>.</div>
+<div class="block">Save the current image data</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#saveImageData(qupath.lib.images.ImageData)" class="member-name-link">saveImageData(ImageData&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
-<div class="block">Save image data <code>imageData</code>.</div>
+<div class="block">Save image data <code>imageData</code> to the current project.</div>
+</dd>
+<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#saveImageData(qupath.lib.images.ImageData,qupath.lib.projects.Project)" class="member-name-link">saveImageData(ImageData&lt;BufferedImage&gt;, Project&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
+<dd>
+<div class="block">Save image data <code>imageData</code> to project <code>project</code>.</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#saveImageServer(qupath.lib.images.servers.ImageServer,java.lang.String)" class="member-name-link">saveImageServer(ImageServer&lt;BufferedImage&gt;, String)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
@@ -344,8 +350,11 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEZ.html#saveProject(qupath.lib.projects.Project)" class="member-name-link">saveProject(Project&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
 <dd>
-<div class="block">Save project <code>project</code> to its associated path
- <code>project</code>.<a href="https://qupath.github.io/javadoc/docs/qupath/lib/projects/Project.html#getPath()" title="class or interface in qupath.lib.projects" class="external-link"><code>getPath()</code></a>.</div>
+<div class="block">Save project <code>project</code> to its associated project path.</div>
+</dd>
+<dt><a href="qupath/ext/py4j/core/QuPathEZ.html#setImageType(qupath.lib.images.ImageData)" class="member-name-link">setImageType(ImageData&lt;BufferedImage&gt;)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEZ.html" title="class in qupath.ext.py4j.core">QuPathEZ</a></dt>
+<dd>
+<div class="block">Set the image type of image data <code>imageData</code>.</div>
 </dd>
 <dt><a href="qupath/ext/py4j/core/QuPathEntryPoint.html#snapshot(qupath.lib.gui.QuPathGUI)" class="member-name-link">snapshot(QuPathGUI)</a> - Static method in class qupath.ext.py4j.core.<a href="qupath/ext/py4j/core/QuPathEntryPoint.html" title="class in qupath.ext.py4j.core">QuPathEntryPoint</a></dt>
 <dd>
@@ -415,7 +424,7 @@ loadScripts(document, 'script');</script>
 <div class="block">Create a list of <a href="https://qupath.github.io/javadoc/docs/qupath/lib/roi/interfaces/ROI.html" title="class or interface in qupath.lib.roi.interfaces" class="external-link"><code>ROI</code></a> from a GeoJSON representation.</div>
 </dd>
 </dl>
-<a href="#I:A">A</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:Q">Q</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a></main>
+<a href="#I:A">A</a>&nbsp;<a href="#I:C">C</a>&nbsp;<a href="#I:E">E</a>&nbsp;<a href="#I:G">G</a>&nbsp;<a href="#I:I">I</a>&nbsp;<a href="#I:L">L</a>&nbsp;<a href="#I:O">O</a>&nbsp;<a href="#I:Q">Q</a>&nbsp;<a href="#I:R">R</a>&nbsp;<a href="#I:S">S</a>&nbsp;<a href="#I:T">T</a>&nbsp;<br><a href="allclasses-index.html">All&nbsp;Classes&nbsp;and&nbsp;Interfaces</a><span class="vertical-separator">|</span><a href="allpackages-index.html">All&nbsp;Packages</a></main>
 </div>
 </div>
 </body>
