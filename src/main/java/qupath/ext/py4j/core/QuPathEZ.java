@@ -56,13 +56,13 @@ public class QuPathEZ extends QuPathFX {
 	}
 
 	/**
-	 * Save project <code>project</code> to its associated project path.
+	 * Save <code>project</code> back to its associated path.
 	 *
 	 * <p>
-	 *     {@link Project} is created with its associated project path.
-	 *     It is always saved back to its associated project path.
+	 *     {@link Project} is created with its associated path
+	 *     and has to be saved back to it.
 	 * </p>
-	 * 
+	 *
 	 * @param project the project to save
 	 * @throws IOException if an error occurs while saving the project
 	 *
@@ -94,18 +94,18 @@ public class QuPathEZ extends QuPathFX {
 	}
 
 	/**
-	 * Add image server <code>server</code> to project <code>project</code> and
-	 * return its image entry.
+	 * Add image <code>server</code> to <code>project</code> and
+	 * return its {@link ProjectImageEntry}.
 	 *
 	 * <p>
-	 *     The image type of the newly added image entry is estimated by
+	 *     Its {@link ImageData.ImageType ImageType} is estimated by
 	 *     {@link QuPathEZ#estimatedImageType} and
-	 *     its thumbnail is refreshed by {@link QuPathEZ#refreshThumbnail}
+	 *     the thumbnail is refreshed by {@link QuPathEZ#refreshThumbnail}
 	 * </p>
 	 *
 	 * @param project the project to add the image entry to
 	 * @param server  the image server used to create the image entry
-	 * @return the added image entry
+	 * @return <code>entry</code> - the added image entry
 	 * @throws IOException if an error occurs while adding the image entry
 	 *
 	 * @see ProjectCommands#addSingleImageToProject
@@ -120,13 +120,13 @@ public class QuPathEZ extends QuPathFX {
 	}
 
 	/**
-	 * Add image file <code>imagePath</code> to project <code>project</code> and
-	 * return its image entry.
+	 * Add image file <code>imagePath</code> to <code>project</code> and
+	 * return its {@link ProjectImageEntry}.
 	 *
 	 * <p>
-	 *     The image type of the newly added image entry is estimated by
+	 *     Its {@link ImageData.ImageType ImageType} is estimated by
 	 *     {@link QuPathEZ#estimatedImageType} and
-	 *     its thumbnail is refreshed by {@link QuPathEZ#refreshThumbnail}
+	 *     the thumbnail is refreshed by {@link QuPathEZ#refreshThumbnail}
 	 * </p>
 	 *
 	 * @param project the project to add the image entry to
@@ -145,9 +145,14 @@ public class QuPathEZ extends QuPathFX {
 	}
 
 	/**
-	 * Remove image entry <code>entry</code> from project <code>project</code>.
+	 * Remove image <code>entry</code> from <code>project</code>.
 	 * All associated data will be removed.
 	 *
+	 * <p>
+	 *     {@link ProjectImageEntry} is part  of {@link Project} and
+	 *     will be deleted when it is removed. The only thing remains
+	 *     is the image server used to create it.
+	 * </p>
 	 * @param project the project to remove the image entry from
 	 * @param entry   the image entry to remove
 	 *
@@ -160,10 +165,10 @@ public class QuPathEZ extends QuPathFX {
 	}
 
 	/**
-	 * Create a new {@link ImageData} using image server <code>server</code>.
+	 * Create a new {@link ImageData} using image <code>server</code>.
 	 * Its image type is estimated by {@link QuPathEZ#estimatedImageType}.
 	 *
-	 * @param server the image server to create the image data from
+	 * @param server the image server used to create the image data
 	 * @return <code>imageData</code> - the created image data
 	 *
 	 * @see ImageData
@@ -177,7 +182,7 @@ public class QuPathEZ extends QuPathFX {
 	 * Create a new {@link ImageData} using image file <code>imagePath</code>.
 	 * Its image type is estimated by {@link QuPathEZ#estimatedImageType}.
 	 *
-	 * @param imagePath the image file to create the image data from
+	 * @param imagePath the image file used to create the image data
 	 * @return <code>imageData</code> - the created image data
 	 * @throws URISyntaxException if the image path is not a valid {@link URI}
 	 * @throws IOException if an error occurs while loading the image file
@@ -189,7 +194,7 @@ public class QuPathEZ extends QuPathFX {
 	}
 
 	/**
-	 * Save image data <code>imageData</code> to project <code>project</code>.
+	 * Save <code>imageData</code> back to its <code>project</code>.
 	 *
 	 * @param imageData the image data to save
 	 * @param project the project to save to
@@ -210,7 +215,7 @@ public class QuPathEZ extends QuPathFX {
 	}
 
 	/**
-	 * Save image data <code>imageData</code> to the current project.
+	 * Save <code>imageData</code> back to the current project.
 	 *
 	 * @param imageData the image data to save
 	 * @throws IOException if an error occurs while saving the image data
@@ -262,7 +267,7 @@ public class QuPathEZ extends QuPathFX {
 	}
 
 	/**
-	 * Create a new {@link OpenslideImageServer} for image file <code>imagePath</code>.
+	 * Create a new {@link OpenslideImageServer} using image file <code>imagePath</code>.
 	 *
 	 * @param imagePath the path to the image file
 	 * @return <code>openslideServer</code> - the created Openslide image server
@@ -276,7 +281,7 @@ public class QuPathEZ extends QuPathFX {
 	}
 
 	/**
-	 * Create a new {@link ImageServer} for image file <code>imagePath</code>.
+	 * Create a new {@link ImageServer} using image file <code>imagePath</code>.
 	 *
 	 * <p>
 	 *     QuPath will decide which {@link ImageServerBuilder}
@@ -295,7 +300,7 @@ public class QuPathEZ extends QuPathFX {
 	}
 
 	/**
-	 * Save image server <code>server</code> to JSON file <code>jsonServerPath</code>.
+	 * Save image <code>server</code> to JSON file <code>jsonServerPath</code>.
 	 *
 	 * @param server         the image server to save
 	 * @param jsonServerPath the path to save image server
@@ -356,13 +361,13 @@ public class QuPathEZ extends QuPathFX {
 	}
 
 	/**
-	 * Estimate the image type of <code>server</code>
+	 * Estimate <code>server</code>'s {@link ImageData.ImageType}
 	 * using its default thumbnail.
 	 *
 	 * <p>
 	 *     {@link ImageData.ImageType ImageType} is a property belonging
 	 *     to {@link ImageData} or {@link ProjectImageEntry}.
-	 *     It is the property we use to interpret the image as RGB, grayscale, etc.
+	 *     It specifies what kind of image it is (e.g. RGB, grayscale, ...)
 	 * </p>
 	 *
 	 * @param server the image server to estimate the image type
